@@ -140,18 +140,20 @@ function requestAuthentication() {
     "use strict";
 
     var vkAuthenticationUrl      = 'https://oauth.vk.com/authorize',
-        vkCLientId               = '3470032',
+        // vkCLientId               = '3470032',
+        vkCLientId               = '3315996',
         vkRequestedScopes        = 'docs,offline,friends,groups',
         authenticationParameters = {
             'client_id'     : vkCLientId,
             'scope'         : vkRequestedScopes,
-            'redirect_uri'  : encodeURIComponent("http://oauth.vk.com/blank.html"),
+            'redirect_uri'  : "http://oauth.vk.com/blank.html",
             'display'       : 'page',
             'response_type' : 'token'
         },
         urlParameters = '?' + serialize(authenticationParameters);
 
     vkAuthenticationUrl += urlParameters;
+    // chrome.storage.local.remove('vk_access_token');
 
     if (vkGlobalAccessToken !== undefined) {
         requestFriendsInfo();

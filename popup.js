@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
 
-        if (items.vk_gm_all_friends_data === undefined) {
+        if (items.vk_gm_all_friends_data.friendsListGlobal === undefined) {
 
             requestAuthentication();
 

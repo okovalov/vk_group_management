@@ -30,7 +30,7 @@ function authenticationListener(authenticationTabId) {
                 chrome.storage.local.set({'vk_access_token': vkAccessToken}, function () {
                     vkGlobalAccessToken = vkAccessToken;
 
-                    requestFriendsInfo();
+                    getFriendsList();
                 });
             }
         }
@@ -59,7 +59,7 @@ function requestAuthentication() {
     // vkGlobalAccessToken = undefined;
 
     if (vkGlobalAccessToken !== undefined) {
-        requestFriendsInfo();
+        getFriendsList();
     }
 
     chrome.storage.local.get({'vk_access_token': {}}, function (items) {
@@ -74,6 +74,6 @@ function requestAuthentication() {
 
         vkGlobalAccessToken = items.vk_access_token;
 
-        requestFriendsInfo();
+        getFriendsList();
     });
 }

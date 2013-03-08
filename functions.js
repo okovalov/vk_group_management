@@ -79,3 +79,10 @@ function getUrlParameterValue(url, parameterName) {
 
     return parameterValue;
 }
+
+function appendToBody(elementType, elementProperty, propertyValue) {
+    childElement                  = document.createElement(elementType);
+    childElement[elementProperty] = propertyValue;
+
+    document.body.appendChild(childElement);
+}

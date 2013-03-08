@@ -1,31 +1,36 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Getting Started Extension's Popup</title>
-    <style>
-      body {
-        min-width: 357px;
-        overflow-x: hidden;
-      }
+    <head>
+        <title>VK Group Management Popup</title>
+        <style>
+            body {
+                min-width: 357px;
+                overflow-x: hidden;
+            }
 
-      img {
-        margin: 5px;
-        border: 2px solid black;
-        vertical-align: middle;
-        width: 75px;
-        height: 75px;
-      }
-    </style>
+            img {
+                vertical-align: middle;
+                width: 100%;
+                height: 35px;
+            }
 
-    <script src="functions.js"></script>
-    <script src="authentication.js"></script>
-    <script src="popup.js"></script>
+        </style>
 
-  </head>
-  <body>
-      <div id="wrap" style="height: 100%;">
-        <img class="centered" src="wait.gif" width="168" height="40"/>
-      </div>
-  </body>
+        <script src="global.js"></script>
+        <script src="functions.js"></script>
+        <script src="authentication.js"></script>
+        <script src="popup.js"></script>
+
+    </head>
+    <body>
+        <div id="wrap" style="height: 100%;">
+            <p>Requesting friend #<span id="current_friend_number">1</span> information. Please wait.</p>
+            <img class="centered" src="wait.gif" width="168" height="40"/>
+        </div>
+        <div id="wrap-done" style="height: 100%;">
+            <p>Done. <a id="details_page_link" href="details.html">Details</a></p>
+        </div>
+
+    </body>
 </html>
 

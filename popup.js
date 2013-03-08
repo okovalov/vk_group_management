@@ -1,34 +1,13 @@
 /*global document, chrome, alert, XMLHttpRequest */
 
+function updateRequestedFriendNumber(idx) {
+    document.getElementById('current_friend_number').innerHTML = idx + 1;
+}
 
-var vkGlobalAccessToken,
-    VkApi = function () {
-        "use strict";
-
-        var vkURL   = 'https://api.vk.com/method/',
-            request = new XMLHttpRequest();
-
-        this.get = function (methodName, onloadCallaback, callerInstance, incomingParameters, incomingAdditionalParameters, incomingRequestType) {
-            var parameters    = incomingParameters === undefined ? undefined : incomingParameters,
-                requestType   = incomingRequestType === undefined ? 'GET' : incomingRequestType,
-                additionalParameters = incomingAdditionalParameters === undefined ? undefined : incomingAdditionalParameters,
-                urlParameters = parameters !== undefined ? '?' + serialize(parameters) : '';
-
-            request.open(requestType,  vkURL + methodName + urlParameters, true);
-            request.onload = onloadCallaback.bind(callerInstance, additionalParameters);
-            request.send(null);
-        };
-    },
-    vkApiInstance = new VkApi(),
-    membersListGlobal,
-    friendsListGlobal;
-
-function showFriends(additionalParameters, e) {
+function getFriendsListCallback(additionalParameters, e) {
     "use strict";
 
-    var answer = JSON.parse(e.target.response),
-        friends,
-        friendsInfo;
+    var answer = JSON.parse(e.target.response);
 
     if (answer.error !== undefined) {
         handleError(answer.error);
@@ -36,18 +15,14 @@ function showFriends(additionalParameters, e) {
         return;
     }
 
-    friends = answer.response;
-    friendsListGlobal = friends;
+    friendsListGlobal = answer.response;
 
-    friendsInfo           = document.createElement('p');
-    friendsInfo.innerHTML = 'Friends count: ' + friends.length;
+    appendToBody('p', 'innerHTML', 'Friends count: ' + friendsListGlobal.length);
 
-    document.body.appendChild(friendsInfo);
-
-    requestGroupMembersList();
+    getGroupMembersList();
 }
 
-function requestFriendsInfo(friendsGenerator) {
+function getFriendsList(friendsGenerator) {
     "use strict";
 
     var parameters = {
@@ -55,15 +30,13 @@ function requestFriendsInfo(friendsGenerator) {
             'fields'       : 'uid,first_name,last_name'
         };
 
-    vkApiInstance.get('friends.get', showFriends, this, parameters);
+    vkApiInstance.get('friends.get', getFriendsListCallback, this, parameters);
 }
 
-function showMembers(additionalParameters, e) {
+function getGroupMembersListCallback(additionalParameters, e) {
     "use strict";
 
-    var answer = JSON.parse(e.target.response),
-        members,
-        membersInfo;
+    var answer = JSON.parse(e.target.response);
 
     if (answer.error !== undefined) {
         handleError(answer.error);
@@ -71,52 +44,75 @@ function showMembers(additionalParameters, e) {
         return;
     }
 
-    members = answer.response;
-    membersListGlobal = members;
+    membersListGlobal = answer.response;
 
-    membersInfo           = document.createElement('p');
-    membersInfo.innerHTML = 'Group members count: ' + members.count;
+    appendToBody('p', 'innerHTML', 'Group members count: ' + membersListGlobal.count);
 
-    document.body.appendChild(membersInfo);
+    friendsMembersOfTheGroup    = [];
+    friendsNotMembersOfTheGroup = [];
+    friendsInvitedToTheGroup    = [];
 
-    getFriendsNonMemberes();
+    checkFriendIsInGroup(0, vkGroupId);
 }
 
-function getFriendsNonMemberes() {
-    "use strict";
-
-    var idx,
-        memberId;
-
-        checkUserInGroup(0, 49912690);
-}
-
-function checkUserInGroup(idx, gid) {
+function getGroupMembersList() {
     "use strict";
 
     var parameters = {
             'access_token' : vkGlobalAccessToken,
-            'gid'          : gid,
-            'uid'          : friendsListGlobal[idx].uid,
-            'extended'     : 1
-        },
-        membersInfo,
-        additionalParameters = {
-            'idx' : idx,
-            'gid' : gid
+            'gid'          : vkGroupId,
+            'sort'         : 'id_asc'
         };
 
-    vkApiInstance.get('groups.isMember', addFriend, this, parameters, additionalParameters);
-
+    vkApiInstance.get('groups.getMembers', getGroupMembersListCallback, this, parameters);
 }
 
-function addFriend(additionalParameters, e) {
+function saveFriendsDataToSotrage() {
+    "use strict";
+
+    var vk_gm_all_friends_data = {
+        'friendsMembersOfTheGroup' : friendsMembersOfTheGroup,
+        'friendsInvitedToTheGroup' : friendsInvitedToTheGroup,
+        'friendsNotMembersOfTheGroup' : friendsNotMembersOfTheGroup,
+        'friendsListGlobal' : friendsListGlobal
+    }
+
+    chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
+    });
+}
+
+function updateFriendsDataLables() {
+    appendToBody('p', 'innerHTML', '<br/>Friends - members of the group count: ' + friendsMembersOfTheGroup.length);
+    appendToBody('p', 'innerHTML', 'Friends - invited to the group count: ' + friendsInvitedToTheGroup.length);
+    appendToBody('p', 'innerHTML', 'Friends - not members of the group count: ' + friendsNotMembersOfTheGroup.length);
+
+    document.getElementById('wrap-done').style.display = '';
+    document.getElementById('wrap-done').style.hidden = '';
+
+    document.getElementById('wrap').style.display = 'none';
+    document.getElementById('wrap').style.hidden = 'hidden';
+}
+
+function getNextFriendInfo(idx, gid) {
+    if (friendsListGlobal[idx + 1] === undefined) {
+
+        saveFriendsDataToSotrage();
+        updateFriendsDataLables();
+
+        return;
+    }
+
+    setTimeout(function () {
+        checkFriendIsInGroup(idx + 1, gid);
+    }, 150);
+}
+
+function checkFriendIsInGroupCallback(additionalParameters, e) {
     "use strict";
 
     var answer = JSON.parse(e.target.response),
-        member,
+        friendInfo,
         friend,
-        membersInfo,
         idx = additionalParameters.idx,
         gid = additionalParameters.gid;
 
@@ -126,56 +122,75 @@ function addFriend(additionalParameters, e) {
         return;
     }
 
-    member = answer.response;
+    friendInfo = answer.response;
+    friend     = friendsListGlobal[idx];
 
-    if (member.member === 1) {
-        friend = friendsListGlobal[idx];
+    if (friendInfo.member === 1) {
+        friendsMembersOfTheGroup.push(friend);
 
-        membersInfo = document.createElement('a');
-        membersInfo.setAttribute('href', 'http://vk.com/id' + friend.uid);
-        membersInfo.textContent = friend.first_name + ' ' + friend.last_name;
-
-        document.body.appendChild(membersInfo);
-
-        membersInfo           = document.createElement('p');
-
-        membersInfo.innerHTML = 'NOT invited';
-
-        if (member.invited !== undefined) {
-            membersInfo.innerHTML = 'is invited';
-        }
-
-        document.body.appendChild(membersInfo);
-
+        return getNextFriendInfo(idx, gid);
     }
 
-    if (friendsListGlobal[idx + 1] === undefined) {
-        document.getElementById('wrap').innerHTML = '<p>Done</p>';
-        return;
+    if (friendInfo.invited !== undefined) {
+        friendsInvitedToTheGroup.push(friend);
     }
 
-    // if (friendsListGlobal[idx + 1] !== undefined) {
-    setTimeout(function () {
-        checkUserInGroup(idx + 1, gid);
-    }, 500);
-    // }
+    friendsNotMembersOfTheGroup.push(friend);
 
+    return getNextFriendInfo(idx, gid);
 }
 
-function requestGroupMembersList() {
+function checkFriendIsInGroup(idx, gid) {
     "use strict";
 
     var parameters = {
             'access_token' : vkGlobalAccessToken,
-            'gid'          : 49912690,
-            'sort'         : 'id_asc'
+            'gid'          : gid,
+            'uid'          : friendsListGlobal[idx].uid,
+            'extended'     : 1
+        },
+        additionalParameters = {
+            'idx' : idx,
+            'gid' : gid
         };
 
-    vkApiInstance.get('groups.getMembers', showMembers, this, parameters);
+    updateRequestedFriendNumber(idx);
+
+    vkApiInstance.get('groups.isMember', checkFriendIsInGroupCallback, this, parameters, additionalParameters);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     "use strict";
 
-    requestAuthentication();
+    document.getElementById('wrap').style.display = '';
+    document.getElementById('wrap').style.hidden = '';
+
+    document.getElementById('wrap-done').style.display = 'none';
+    document.getElementById('wrap-done').style.hidden = 'hidden';
+
+    document.getElementById('details_page_link').addEventListener('click', function () {
+        chrome.tabs.create({url: 'details.html', selected: true}, function (tab) {
+        });
+
+    });
+
+    chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
+
+        if (items.vk_gm_all_friends_data === undefined) {
+
+            requestAuthentication();
+
+            return;
+        }
+
+        friendsMembersOfTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
+        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
+        friendsListGlobal           = items.vk_gm_all_friends_data.friendsListGlobal;
+
+        updateFriendsDataLables();
+
+    });
+
 });
+

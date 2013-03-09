@@ -1,0 +1,18 @@
+.rounded {
+    border-style: solid;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(219, 219, 219);
+    padding: 15px 5px 5px 15px;
+    margin-top: 24px;
+    height: auto;
+}
+
+.row .navbar {
+    padding-top: 10px;
+    padding-left: 15px;
+}
+
+.navbar span.section-title {
+    font-size: 15px;
+}

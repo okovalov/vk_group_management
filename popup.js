@@ -71,10 +71,11 @@ function saveFriendsDataToSotrage() {
     "use strict";
 
     var vk_gm_all_friends_data = {
+        'membersListGlobal' : membersListGlobal,
+        'friendsListGlobal' : friendsListGlobal,
         'friendsMembersOfTheGroup' : friendsMembersOfTheGroup,
-        'friendsInvitedToTheGroup' : friendsInvitedToTheGroup,
         'friendsNotMembersOfTheGroup' : friendsNotMembersOfTheGroup,
-        'friendsListGlobal' : friendsListGlobal
+        'friendsInvitedToTheGroup' : friendsInvitedToTheGroup
     }
 
     chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
@@ -169,7 +170,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('wrap-done').style.hidden = 'hidden';
 
     document.getElementById('details_page_link').addEventListener('click', function () {
-        chrome.tabs.create({url: 'details.html', selected: true}, function (tab) {
+
+        chrome.tabs.create({url: 'details/details.html', selected: true}, function (tab) {
+            window.close();
         });
 
     });
@@ -183,10 +186,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        friendsMembersOfTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
-        friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
-        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
+        membersListGlobal           = items.vk_gm_all_friends_data.membersListGlobal;
         friendsListGlobal           = items.vk_gm_all_friends_data.friendsListGlobal;
+        friendsMembersOfTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
+        friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
 
         updateFriendsDataLables();
 

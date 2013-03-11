@@ -11,12 +11,12 @@
     <body>
         <div class="container">
             <div class="row">
-                <div class="navbar">
+<!--                 <div class="navbar">
                     <div class="navbar-inner">
                         <span class="brand" href="#">Title</span>
                     </div>
                 </div>
-                <div class="span3 bs-docs-sidebar">
+ -->                <div class="span3 bs-docs-sidebar">
                     <div class="tabbable">
                         <ul class="nav nav-tabs nav-stacked bs-docs-sidenav">
                             <li class="nav-header">Friends Info:</li>
@@ -36,34 +36,34 @@
                 <div class="span9">
                     <div class="tab-content">
                         <div class="tab-pane active rounded" id="tab1">
-                            <div class="navbar">
+<!--                             <div class="navbar">
                                 <div class="navbar-inner">
                                     <span class="brand section-title" href="#">Friends who are members already</span>
                                 </div>
                             </div>
-                            <div class="friend-info" style="display: none"></div>
+ -->                            <div class="friend-info" style="display: none"></div>
                             <div class="progress progress-success progress-striped">
                                 <div class="bar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="tab-pane rounded" id="tab2">
-                            <div class="navbar">
+<!--                             <div class="navbar">
                                 <div class="navbar-inner">
                                     <span class="brand section-title" href="#">Friends who are invited</span>
                                 </div>
                             </div>
-                            <div class="friend-info" style="display: none"></div>
+ -->                            <div class="friend-info" style="display: none"></div>
                             <div class="progress progress-success progress-striped">
                                 <div class="bar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="tab-pane rounded" id="tab3">
-                            <div class="navbar">
+<!--                             <div class="navbar">
                                 <div class="navbar-inner">
                                     <span class="brand section-title" href="#">Friends who are not members and not invited yet</span>
                                 </div>
                             </div>
-                            <div class="friend-info" style="display: none"></div>
+ -->                            <div class="friend-info" style="display: none"></div>
                             <div class="progress progress-success progress-striped">
                                 <div class="bar" style="width: 0%"></div>
                             </div>
@@ -72,17 +72,22 @@
                 </div>
             </div>
         </div>
-        <div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+        <div id="newMessageModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="newMessageModalLabel" aria-hidden="true">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h3 id="myModalLabel">Modal header</h3>
+            <h3 id="newMessageModalLabel">New message to <span></span></h3>
+            <input type="hidden" id="friendUid" value="0" />
           </div>
           <div class="modal-body">
-            <p>One fine body…</p>
+            <p>Enter your message here:</p>
+            <textarea rows="3" cols="25" class="message"></textarea>
+            <p>Messages history:</p>
+            <textarea rows="3" cols="25" readonly="readonly"></textarea>
           </div>
           <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-            <button class="btn btn-primary">Save changes</button>
+            <button class="btn btn-primary">Send</button>
           </div>
         </div>
 

@@ -44,8 +44,11 @@ td.friend-action-result p {
 }
 
 .table-striped th {
-    text-align: center;
     vertical-align: middle;
+}
+
+.table-striped th.centered {
+    text-align: center;
 }
 
 .table-striped th input {
@@ -55,4 +58,13 @@ td.friend-action-result p {
 
 div.span3 .bs-docs-sidebar {
     margin-left: 0px;
+}
+
+div.modal-body textarea {
+    width: 500px;
+    height: 150px;
+}
+
+div.collapse {
+    font-size: 10px;
 }

@@ -53,11 +53,11 @@ td.friend-action-result p {
 
 .table-striped th input {
     margin-left: 10px;
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 div.span3 .bs-docs-sidebar {
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 div.modal-body textarea {
@@ -67,4 +67,24 @@ div.modal-body textarea {
 
 div.collapse {
     font-size: 10px;
+}
+
+th.friend-name {
+    width: 23%;
+}
+
+th.friend-url {
+    width: 26%;
+}
+
+th.select-unselect {
+    width: 12%;
+}
+
+th.friend-actions {
+    width: 21%;
+}
+
+th.friend-actions -rest: {
+    width: 18%;
 }

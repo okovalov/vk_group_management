@@ -1,4 +1,4 @@
-/*global document, chrome,  */
+/*global document, chrome, $, jQuery  */
 
 function updateFriendsInforamtionLables() {
     "use strict";
@@ -19,7 +19,6 @@ function loadDateFromStorage(callback) {
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
 
         if (items.vk_gm_all_friends_data.friendsListGlobal === undefined) {
-
             return;
         }
 
@@ -35,73 +34,169 @@ function loadDateFromStorage(callback) {
 
         callback();
     });
-
 }
 
 
 function getActionsList(tab) {
     "use strict";
 
-    var $btnGroup = $('<div></div>', { class: 'btn-group' }),
-        $messageButtonHolder,
-        $messageButton,
-        $wallButtonHolder,
-        $wallButton,
+    var $buttonsGroup,
+        $sendMessageButtonHolder,
+        $sendMessageButton,
+        $postOnWallButtonHolder,
+        $postOnWallButton,
         $inviteButtonHolder,
         $inviteButton,
-        $inviteHistoryButtonHolder,
-        $inviteHistoryButton,
-        $inviteHistory,
-        $messageHistoryButtonHolder,
-        $messageHistoryButton,
-        options;
+        $invitationsHistory,
+        $invitationsHistoryButtonHolder,
+        $invitationsHistoryButton,
+        $messagesHistoryButtonHolder,
+        $messagesHistoryButton,
+        elementOptions,
+        temporaryelEmentOptions;
 
-    $messageButtonHolder        = $('<a></a>', {
-            class: 'btn btn-new-message',
-            href : '#',
-            'data-toggle' : "tooltip",
-            title : "Send a message"
-        })
-        .appendTo($btnGroup),
-    $messageButton              = $('<i></i>', { class: 'icon-envelope'}).appendTo($messageButtonHolder),
-    $wallButtonHolder           = $('<a></a>', { class: 'btn', href : '#', 'data-toggle' : "tooltip", title : "Post on the wall"}).appendTo($btnGroup),
-    $wallButton                 = $('<i></i>', { class: 'icon-share'}).appendTo($wallButtonHolder),
-    $messageHistoryButtonHolder = $('<a></a>', { class: 'btn', href : '#', 'data-toggle' : "tooltip", title : "Messages history"}).appendTo($btnGroup),
-    $messageHistoryButton       = $('<i></i>', { class: 'icon-folder-open'}).appendTo($messageHistoryButtonHolder);
+    elementOptions = {'class' : 'btn-group'};
+    $buttonsGroup  = $('<div></div>', elementOptions);
+
+    elementOptions = {
+        'class'       : 'btn btn-new-message',
+        'href'        : '#',
+        'data-toggle' : "tooltip",
+        'title'       : "Send a message"
+    };
+    $sendMessageButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
+
+    elementOptions     = {'class' : 'icon-envelope'};
+    $sendMessageButton = $('<i></i>', elementOptions).appendTo($sendMessageButtonHolder);
+
+    elementOptions = {
+        'class'       : 'btn',
+        'href'        : '#',
+        'data-toggle' : "tooltip",
+        'title'       : "Post on the wall"
+    };
+    $postOnWallButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
+
+    elementOptions    = {'class' : 'icon-share'};
+    $postOnWallButton = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolder);
+
+    elementOptions = {
+        'class'       : 'btn',
+        'href'        : '#',
+        'data-toggle' : "tooltip",
+        'title'       : "Messages history"
+    };
+    $messagesHistoryButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
+
+    elementOptions         = {'class' : 'icon-folder-open'};
+    $messagesHistoryButton = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolder);
 
     if (tab === 'tab3') {
-        $inviteButtonHolder         = $('<a></a>', { class: 'btn', href : '#', title : "Invite to the group"}).appendTo($btnGroup),
-        $inviteButton               = $('<i></i>', { class: 'icon-plus'}).appendTo($inviteButtonHolder);
-        $inviteHistoryButtonHolder  = $('<a></a>', { class: 'btn btn-invite-history', href : '#', title : "Invitations history"}).appendTo($btnGroup),
-        $inviteHistoryButton        = $('<i></i>', { class: 'icon-question-sign'}).appendTo($inviteHistoryButtonHolder);
-        options                     = { title: 'Invitations history', content : 'Nothing to say for now', placement: 'bottom'},
 
-        $inviteHistory              = $('<div></div>', { class : "collapse", text: "Invited 10 times - click for details"}).popover(options).appendTo($btnGroup);
+        elementOptions = {
+            'class' : 'btn',
+            'href'  : '#',
+            'title' : "Invite to the group"
+        };
+        $inviteButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
+
+        elementOptions = {'class' : 'icon-plus'};
+        $inviteButton  = $('<i></i>', elementOptions).appendTo($inviteButtonHolder);
+
+        elementOptions                  = {
+            'class' : 'btn btn-invite-history',
+            'href'  : '#',
+            'title' : "Invitations history"
+        };
+        $invitationsHistoryButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
+
+        elementOptions            = {'class' : 'icon-question-sign'};
+        $invitationsHistoryButton = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolder);
+
+        temporaryelEmentOptions = {
+            'title'     : 'Invitations history',
+            'content'   : 'Nothing to say for now',
+            'placement' : 'bottom'
+        };
+        elementOptions = {
+            'class' : "collapse",
+            'text'  : "Invited 10 times - click for details"
+        };
+        $invitationsHistory = $('<div></div>', elementOptions).popover(temporaryelEmentOptions).appendTo($buttonsGroup);
     }
 
-    return $btnGroup;
+    return $buttonsGroup;
 }
 
 function buildFriendListRow(tab, friend) {
     "use strict";
 
-    var $row                        = $('<tr></tr>', { class: tab + '_friend_' }),
-        $name                       = $('<td></td>', { class: 'friend_name', text: friend.first_name + ' ' + friend.last_name}).appendTo($row),
+    var $row,
+        $name,
+        friendUrlString,
+        $urlHolder,
+        $url,
+        $checkBoxHolder,
+        $checkbox,
+        $btnHolder,
+        $btnToolbar,
+        $btnGroup,
+        $actionResultHolder,
+        elementOptions,
+        temporaryelEmentOptions,
+        $actionResult;
 
-        friendUrl                   = 'http://vk.com/id' + friend.uid,
-        $urlHolder                  = $('<td></td>', { class: 'friend_url', 'data-friend-uid': friend.uid}).appendTo($row),
-        $url                        = $('<a></a>', { text: friendUrl, href : friendUrl, target: '_blank'}).appendTo($urlHolder),
+    elementOptions = {'class' : tab + '_friend_'};
+    $row           = $('<tr></tr>', elementOptions);
 
-        $checkBoxHolder             = $('<td></td>', { class: 'friend_checkbox'}).appendTo($row),
-        $checkbox                   = $('<input></input>', { type: 'checkbox'}).appendTo($checkBoxHolder),
+    elementOptions = {
+        'class' : 'friend_name',
+        'text'  : friend.first_name + ' ' + friend.last_name
+    };
+    $name = $('<td></td>', elementOptions).appendTo($row);
 
-        $btnHolder                  = $('<td></td>', { class: 'friend-actions'}).appendTo($row),
-        $btnToolbar                 = $('<div></div>', { class: 'btn-toolbar' }).appendTo($btnHolder),
-        $btnGroup                   = getActionsList(tab).appendTo($btnToolbar),
+    elementOptions = {
+        'class'           : 'friend_url',
+        'data-friend-uid' : friend.uid
+    };
+    $urlHolder = $('<td></td>', elementOptions).appendTo($row);
 
-        $actionResultHolder         = $('<td></td>', { class: 'friend-action-result'}).appendTo($row),
-        options                     = { title: 'Details of the last action', content : 'Nothing to say for now'},
-        $actionResult               = $('<p></p>', { class: 'text-success', text : 'Click for details'}).popover(options).appendTo($actionResultHolder);
+    friendUrlString = 'http://vk.com/id' + friend.uid;
+    elementOptions  = {
+        'text'   : friendUrlString,
+        'href'   : friendUrlString,
+        'target' : '_blank'
+    };
+    $url = $('<a></a>', elementOptions).appendTo($urlHolder);
+
+    elementOptions  = {'class' : 'friend_checkbox'};
+    $checkBoxHolder = $('<td></td>', elementOptions).appendTo($row);
+
+    elementOptions = {'type' : 'checkbox'};
+    $checkbox      = $('<input></input>', elementOptions).appendTo($checkBoxHolder);
+
+    elementOptions = {'class' : 'friend-actions'};
+    $btnHolder     = $('<td></td>', elementOptions).appendTo($row);
+
+    elementOptions = {'class' : 'btn-toolbar' };
+    $btnToolbar    = $('<div></div>', elementOptions).appendTo($btnHolder);
+
+    $btnGroup = getActionsList(tab).appendTo($btnToolbar);
+
+    elementOptions      = {'class' : 'friend-action-result'};
+    $actionResultHolder = $('<td></td>', elementOptions).appendTo($row);
+
+    temporaryelEmentOptions = {
+        'title'     : 'Details of the last action',
+        'content'   : 'Nothing to say for now',
+        'placement' : 'bottom'
+
+    };
+    elementOptions = {
+        'class' : 'text-success',
+        'text'  : 'Click for details'
+    };
+    $actionResult = $('<p></p>', elementOptions).popover(temporaryelEmentOptions).appendTo($actionResultHolder);
 
     return $row;
 }
@@ -109,13 +204,13 @@ function buildFriendListRow(tab, friend) {
 function selectUnselectFriends(e) {
     "use strict";
 
-    var cbx  = e.currentTarget;
+    var cbx  = e.currentTarget,
         $cbx = $(cbx),
         $parent,
         $checkboxes;
 
-    $parent      = $cbx.closest('table');
-    $checkboxes  = $parent.find('.friend_checkbox input')
+    $parent     = $cbx.closest('table');
+    $checkboxes = $parent.find('.friend_checkbox input');
 
     $checkboxes.prop('checked', cbx.checked);
 }
@@ -127,62 +222,104 @@ function loadFriendsToContentAreaHandler(friendsArray, tab) {
         friend,
         currentProgress,
         $tableRow,
-        $tab              = $('#'+tab),
-        $friendInfoHolder = $tab.children('div.friend-info'),
-        $progressHolder   = $tab.children('div.progress'),
-        $progressBar      = $progressHolder.children().eq(0),
-        $friendsTable     = $('<table></table>', { class: 'table table-striped  table-condensed table-bordered'}).appendTo($friendInfoHolder),
-        $tableHeader      = $('<thead></thead>').appendTo($friendsTable),
-        $tableHeaderRow   = $('<tr></tr>').appendTo($tableHeader),
-        $tableHead        = $('<th></th>', { text: 'Friend name'}).css('width', '23%').appendTo($tableHeaderRow),
-        $tableHead        = $('<th></th>', { text: 'Page Url'}).css('width', '26%').appendTo($tableHeaderRow),
-        $tableHead        = $('<th></th>', { text: 'Select all', class: 'select-unselect centered'}).data('status', 'false').css('width', '12%').appendTo($tableHeaderRow),
-        $checkbox         = $('<input></input>', { type: 'checkbox', id: 'select-all-'+tab}).on('click', selectUnselectFriends).appendTo($tableHead),
+        $tab,
+        $friendInfoHolder,
+        $progressHolder,
+        $progressBar,
+        $friendsTable,
+        $tableHeader,
+        $tableHeaderRow,
+        $checkbox,
+        $tableHead,
+        elementOptions,
+        temporaryelEmentOptions;
 
-        $tableHead        = $('<th></th>', { text: 'Actions', class : 'centered'}).css('width', '21%').appendTo($tableHeaderRow),
-        $tableHead        = $('<th></th>', { text: 'Result of last action', class : 'centered'}).css('width', '18%').appendTo($tableHeaderRow);
+    $tab              = $('#' + tab);
+    $friendInfoHolder = $tab.children('div.friend-info');
+    $progressHolder   = $tab.children('div.progress');
+    $progressBar      = $progressHolder.children().eq(0);
 
-        for(friendIndex in friendsArray) {
-            friend          = friendsArray[friendIndex];
-            currentProgress = (friendsArray.length * friendIndex  / 100);
-            $tableRow       = buildFriendListRow(tab, friend);
+    elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
+    $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
 
-            $friendsTable.append($tableRow);
-            $progressBar.css('width', currentProgress + '%');
+    $tableHeader    = $('<thead></thead>').appendTo($friendsTable);
+    $tableHeaderRow = $('<tr></tr>').appendTo($tableHeader);
+
+    elementOptions = {
+        'text'  : 'Friend name',
+        'class' : 'friend-name'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text' : 'Page Url',
+        'class' : 'friend-url'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text'  : 'Select all',
+        'class' : 'select-unselect centered'
+    };
+    $tableHead = $('<th></th>', elementOptions).data('status', 'false').appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'type' : 'checkbox',
+        'id'   : 'select-all-' + tab
+    };
+    $checkbox = $('<input></input>', elementOptions).on('click', selectUnselectFriends).appendTo($tableHead);
+
+    elementOptions = {
+        'text'  : 'Actions',
+        'class' : 'centered friend-actions'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text'  : 'Result of last action',
+        'class' : 'centered friend-actions-result'
+    };
+    $tableHead = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    for (friendIndex in friendsArray) {
+        friend          = friendsArray[friendIndex];
+        currentProgress = (friendsArray.length * friendIndex  / 100);
+        $tableRow       = buildFriendListRow(tab, friend);
+
+        $friendsTable.append($tableRow);
+        $progressBar.css('width', currentProgress + '%');
+    }
+
+    $('.btn-invite-history').on('click', function (e) {
+        var $this                = $(e.currentTarget),
+            friendName           = $this.closest('tr').find('.friend_name').text(),
+            friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
+            $invitationsHistory  = $this.parent().find('.collapse');
+
+        if ($invitationsHistory.hasClass('in')) {
+            $invitationsHistory.popover('hide');
+            $invitationsHistory.collapse('hide');
         }
 
-        $('.btn-invite-history').on('click', function (e) {
-            var $this           = $(e.currentTarget),
-                friendName      = $this.closest('tr').find('.friend_name').text(),
-                friendUid       = $this.closest('tr').find('.friend_url').data('friend-uid'),
-                $inviteHistory  = $this.parent().find('.collapse');
+        $invitationsHistory.collapse('show');
+    });
 
-            if ($inviteHistory.hasClass('in')) {
-                $inviteHistory.popover('hide');
-                $inviteHistory.collapse('hide');
-            }
+    $('.btn-new-message').on('click', function (e) {
 
-            $inviteHistory.collapse('show');
+        var $this      = $(e.currentTarget),
+            friendName = $this.closest('tr').find('.friend_name').text(),
+            friendUid  = $this.closest('tr').find('.friend_url').data('friend-uid'),
+            $modal     = $('#newMessageModal');
 
-        });
+        $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
+        $modal.find('#friendUid').val(friendUid);
 
-        $('.btn-new-message').on('click', function (e) {
-            "use strict";
+        $('#newMessageModal').modal();
+    });
 
-            var $this      = $(e.currentTarget),
-                friendName = $this.closest('tr').find('.friend_name').text(),
-                friendUid  = $this.closest('tr').find('.friend_url').data('friend-uid'),
-                $modal     = $('#newMessageModal');
-
-                $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
-                $modal.find('#friendUid').val(friendUid);
-
-            $('#newMessageModal').modal();
-        });
-
-        $progressHolder.hide(function () {
-            $friendInfoHolder.show();
-        });
+    $progressHolder.hide(function () {
+        $friendInfoHolder.show();
+    });
 }
 
 (function ($) {

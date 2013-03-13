@@ -3,8 +3,7 @@ var $sendMessageButtonHolderGlobal,
     $postOnWallButtonHolderGlobal,
     $messagesHistoryButtonHolderGlobal,
     $inviteButtonHolderGlobal,
-    $invitationsHistoryButtonHolderGlobal,
-    $invitationsHistoryElementGlobal;
+    $invitationsHistoryButtonHolderGlobal;
 
 
 function updateFriendsInforamtionLables() {
@@ -29,7 +28,7 @@ function loadDateFromStorage(callback) {
             return;
         }
 
-        friendsMembersOfTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
 
         // TODO - remove it later. Temporaty use to show some data!
         // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
@@ -267,11 +266,8 @@ function createInvitationsHistoryElement() {
     "use strict";
 
     var elementOptions,
-        temporaryelEmentOptions;
-
-    if ($invitationsHistoryElementGlobal !== undefined) {
-        return $invitationsHistoryElementGlobal.clone(true);
-    }
+        temporaryelEmentOptions,
+        $invitationsHistoryElement;
 
     temporaryelEmentOptions = {
         'title':     'Invitations history',
@@ -284,9 +280,9 @@ function createInvitationsHistoryElement() {
         'text':  "Invited 10 times - click for details"
     };
 
-    $invitationsHistoryElementGlobal = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
+    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
 
-    return $invitationsHistoryElementGlobal;
+    return $invitationsHistoryElement;
 }
 
 function createActionButtonsGroup(tabId) {

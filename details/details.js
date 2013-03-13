@@ -1,5 +1,11 @@
 /*global document, chrome, $, jQuery  */
-var $sendMessageButtonHolderGlobal;
+var $sendMessageButtonHolderGlobal,
+    $postOnWallButtonHolderGlobal,
+    $messagesHistoryButtonHolderGlobal,
+    $inviteButtonHolderGlobal,
+    $invitationsHistoryButtonHolderGlobal,
+    $invitationsHistoryElementGlobal;
+
 
 function updateFriendsInforamtionLables() {
     "use strict";
@@ -143,7 +149,6 @@ function createSendMessageButton() {
     "use strict";
 
     var elementOptions,
-        $sendMessageButtonHolder,
         $sendMessageButton;
 
     if ($sendMessageButtonHolderGlobal !== undefined) {
@@ -168,8 +173,11 @@ function createPostOnWallButton() {
     "use strict";
 
     var elementOptions,
-        $postOnWallButtonHolder,
         $postOnWallButton;
+
+    if ($postOnWallButtonHolderGlobal !== undefined) {
+        return $postOnWallButtonHolderGlobal.clone(true);
+    }
 
     elementOptions = {
         'class':       'btn',
@@ -178,19 +186,22 @@ function createPostOnWallButton() {
         'title':       "Post on the wall"
     };
 
-    $postOnWallButtonHolder = $('<a></a>', elementOptions).on('click', onPostOnWallButtonClick);
-    elementOptions          = {'class' : 'icon-share'};
-    $postOnWallButton       = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolder);
+    $postOnWallButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onPostOnWallButtonClick);
+    elementOptions                = {'class' : 'icon-share'};
+    $postOnWallButton             = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolderGlobal);
 
-    return $postOnWallButtonHolder;
+    return $postOnWallButtonHolderGlobal;
 }
 
 function createMessagesHistoryButton() {
     "use strict";
 
     var elementOptions,
-        $messagesHistoryButtonHolder,
         $messagesHistoryButton;
+
+    if ($messagesHistoryButtonHolderGlobal !== undefined) {
+        return $messagesHistoryButtonHolderGlobal.clone(true);
+    }
 
     elementOptions = {
         'class':       'btn',
@@ -199,19 +210,22 @@ function createMessagesHistoryButton() {
         'title':       "Messages history"
     };
 
-    $messagesHistoryButtonHolder = $('<a></a>', elementOptions).on('click', onMessagesHistoryButtonClick);
-    elementOptions               = {'class' : 'icon-folder-open'};
-    $messagesHistoryButton       = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolder);
+    $messagesHistoryButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onMessagesHistoryButtonClick);
+    elementOptions                     = {'class' : 'icon-folder-open'};
+    $messagesHistoryButton             = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolderGlobal);
 
-    return $messagesHistoryButtonHolder;
+    return $messagesHistoryButtonHolderGlobal;
 }
 
 function createInviteButton() {
     "use strict";
 
     var elementOptions,
-        $inviteButtonHolder,
         $inviteButton;
+
+    if ($inviteButtonHolderGlobal !== undefined) {
+        return $inviteButtonHolderGlobal.clone(true);
+    }
 
     elementOptions = {
         'class': 'btn',
@@ -219,19 +233,22 @@ function createInviteButton() {
         'title': "Invite to the group"
     };
 
-    $inviteButtonHolder = $('<a></a>', elementOptions).on('click', onInviteButtonClick);
-    elementOptions      = {'class' : 'icon-plus'};
-    $inviteButton       = $('<i></i>', elementOptions).appendTo($inviteButtonHolder);
+    $inviteButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onInviteButtonClick);
+    elementOptions            = {'class' : 'icon-plus'};
+    $inviteButton             = $('<i></i>', elementOptions).appendTo($inviteButtonHolderGlobal);
 
-    return $inviteButtonHolder;
+    return $inviteButtonHolderGlobal;
 }
 
 function createInvitationsHistoryButton() {
     "use strict";
 
     var elementOptions,
-        $invitationsHistoryButton,
-        $invitationsHistoryButtonHolder;
+        $invitationsHistoryButton;
+
+    if ($invitationsHistoryButtonHolderGlobal !== undefined) {
+        return $invitationsHistoryButtonHolderGlobal.clone(true);
+    }
 
     elementOptions = {
         'class': 'btn btn-invite-history',
@@ -239,19 +256,22 @@ function createInvitationsHistoryButton() {
         'title': "Invitations history"
     };
 
-    $invitationsHistoryButtonHolder = $('<a></a>', elementOptions).on('click', onInvitationsHistoryButtonClick);
+    $invitationsHistoryButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onInvitationsHistoryButtonClick);
     elementOptions                  = {'class' : 'icon-question-sign'};
-    $invitationsHistoryButton       = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolder);
+    $invitationsHistoryButton       = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolderGlobal);
 
-    return $invitationsHistoryButtonHolder;
+    return $invitationsHistoryButtonHolderGlobal;
 }
 
 function createInvitationsHistoryElement() {
     "use strict";
 
     var elementOptions,
-        temporaryelEmentOptions,
-        $invitationsHistoryElement;
+        temporaryelEmentOptions;
+
+    if ($invitationsHistoryElementGlobal !== undefined) {
+        return $invitationsHistoryElementGlobal.clone(true);
+    }
 
     temporaryelEmentOptions = {
         'title':     'Invitations history',
@@ -264,9 +284,9 @@ function createInvitationsHistoryElement() {
         'text':  "Invited 10 times - click for details"
     };
 
-    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
+    $invitationsHistoryElementGlobal = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
 
-    return $invitationsHistoryElement;
+    return $invitationsHistoryElementGlobal;
 }
 
 function createActionButtonsGroup(tabId) {

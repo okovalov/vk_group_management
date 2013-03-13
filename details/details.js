@@ -1,16 +1,17 @@
 /*global document, chrome, $, jQuery  */
+var $sendMessageButtonHolderGlobal;
 
 function updateFriendsInforamtionLables() {
     "use strict";
 
     $('#friends_members_of_the_group').text(friendsMembersOfTheGroup.length);
-    $('#friends_members_of_the_group').trigger('loadFriendsToContentArea', [friendsMembersOfTheGroup, 'tab1']);
+    $('#friends_members_of_the_group').trigger('loadFriendsToContentList', [friendsMembersOfTheGroup, 'tab1']);
 
     $('#friends_invited_to_the_group').text(friendsInvitedToTheGroup.length);
-    $('#friends_invited_to_the_group').trigger('loadFriendsToContentArea', [friendsInvitedToTheGroup, 'tab2']);
+    $('#friends_invited_to_the_group').trigger('loadFriendsToContentList', [friendsInvitedToTheGroup, 'tab2']);
 
     $('#friends_not_members_of_the_group').text(friendsNotMembersOfTheGroup.length);
-    $('#friends_not_members_of_the_group').trigger('loadFriendsToContentArea', [friendsNotMembersOfTheGroup, 'tab3']);
+    $('#friends_not_members_of_the_group').trigger('loadFriendsToContentList', [friendsNotMembersOfTheGroup, 'tab3']);
 }
 
 function loadDateFromStorage(callback) {
@@ -37,12 +38,30 @@ function loadDateFromStorage(callback) {
     });
 }
 
+function onSendMessageButtonClick(e) {
+    "use strict";
+
+    var $this      = $(e.currentTarget),
+        friendName = $this.closest('tr').find('.friend_name').text(),
+        friendUid  = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $modal     = $('#newMessageModal');
+
+    $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
+    $modal.find('#friendUid').val(friendUid);
+
+    $('#newMessageModal').modal();
+}
+
 function createSendMessageButton() {
     "use strict";
 
     var elementOptions,
         $sendMessageButtonHolder,
         $sendMessageButton;
+
+    if ($sendMessageButtonHolderGlobal !== undefined) {
+        return $sendMessageButtonHolderGlobal.clone(true);
+    }
 
     elementOptions = {
         'class':       'btn btn-new-message',
@@ -51,11 +70,11 @@ function createSendMessageButton() {
         'title':       "Send a message"
     };
 
-    $sendMessageButtonHolder = $('<a></a>', elementOptions);
-    elementOptions           = {'class' : 'icon-envelope'};
-    $sendMessageButton       = $('<i></i>', elementOptions).appendTo($sendMessageButtonHolder);
+    $sendMessageButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onSendMessageButtonClick);
+    elementOptions                 = {'class' : 'icon-envelope'};
+    $sendMessageButton             = $('<i></i>', elementOptions).appendTo($sendMessageButtonHolderGlobal);
 
-    return $sendMessageButtonHolder;
+    return $sendMessageButtonHolderGlobal;
 }
 
 function createPostOnWallButton() {
@@ -120,6 +139,22 @@ function createInviteButton() {
     return $inviteButtonHolder;
 }
 
+function onInvitationsHistoryButtonClick(e) {
+    "use strict";
+
+    var $this                = $(e.currentTarget),
+        friendName           = $this.closest('tr').find('.friend_name').text(),
+        friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $invitationsHistory  = $this.parent().find('.collapse');
+
+    if ($invitationsHistory.hasClass('in')) {
+        $invitationsHistory.popover('hide');
+        $invitationsHistory.collapse('hide');
+    }
+
+    $invitationsHistory.collapse('show');
+}
+
 function createInvitationsHistoryButton() {
     "use strict";
 
@@ -133,7 +168,7 @@ function createInvitationsHistoryButton() {
         'title': "Invitations history"
     };
 
-    $invitationsHistoryButtonHolder = $('<a></a>', elementOptions);
+    $invitationsHistoryButtonHolder = $('<a></a>', elementOptions).on('click', onInvitationsHistoryButtonClick);
     elementOptions                  = {'class' : 'icon-question-sign'};
     $invitationsHistoryButton       = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolder);
 
@@ -163,7 +198,7 @@ function createInvitationsHistoryElement() {
     return $invitationsHistoryElement;
 }
 
-function getActionsList(tab) {
+function createActionButtonsGroup(tabId) {
     "use strict";
 
     var $buttonsGroup,
@@ -182,7 +217,7 @@ function getActionsList(tab) {
     $postOnWallButton      = createPostOnWallButton().appendTo($buttonsGroup);
     $messagesHistoryButton = createMessagesHistoryButton().appendTo($buttonsGroup);
 
-    if (tab === 'tab3') {
+    if (tabId === 'tab3') {
         $inviteButton              = createInviteButton().appendTo($buttonsGroup);
         $invitationsHistoryButton  = createInvitationsHistoryButton().appendTo($buttonsGroup);
         $invitationsHistoryElement = createInvitationsHistoryElement().appendTo($buttonsGroup);
@@ -191,7 +226,7 @@ function getActionsList(tab) {
     return $buttonsGroup;
 }
 
-function buildFriendListRow(tab, friend) {
+function buildFriendListTableRow(tab, friend) {
     "use strict";
 
     var $row,
@@ -213,22 +248,22 @@ function buildFriendListRow(tab, friend) {
     $row           = $('<tr></tr>', elementOptions);
 
     elementOptions = {
-        'class' : 'friend_name',
-        'text'  : friend.first_name + ' ' + friend.last_name
+        'class': 'friend_name',
+        'text':  friend.first_name + ' ' + friend.last_name
     };
     $name = $('<td></td>', elementOptions).appendTo($row);
 
     elementOptions = {
-        'class'           : 'friend_url',
-        'data-friend-uid' : friend.uid
+        'class':           'friend_url',
+        'data-friend-uid': friend.uid
     };
     $urlHolder = $('<td></td>', elementOptions).appendTo($row);
 
     friendUrlString = 'http://vk.com/id' + friend.uid;
     elementOptions  = {
-        'text'   : friendUrlString,
-        'href'   : friendUrlString,
-        'target' : '_blank'
+        'text':   friendUrlString,
+        'href':   friendUrlString,
+        'target': '_blank'
     };
     $url = $('<a></a>', elementOptions).appendTo($urlHolder);
 
@@ -244,7 +279,7 @@ function buildFriendListRow(tab, friend) {
     elementOptions = {'class' : 'btn-toolbar' };
     $btnToolbar    = $('<div></div>', elementOptions).appendTo($btnHolder);
 
-    $btnGroup = getActionsList(tab).appendTo($btnToolbar);
+    $btnGroup = createActionButtonsGroup(tab).appendTo($btnToolbar);
 
     elementOptions      = {'class' : 'friend-action-result'};
     $actionResultHolder = $('<td></td>', elementOptions).appendTo($row);
@@ -278,7 +313,58 @@ function selectUnselectFriends(e) {
     $checkboxes.prop('checked', cbx.checked);
 }
 
-function loadFriendsToContentAreaHandler(friendsArray, tab) {
+function getFriendsTableHead() {
+    "use strict";
+
+    var $tableHeader,
+        $tableHeaderRow,
+        $checkbox,
+        $tableHead,
+        elementOptions;
+
+    $tableHeader    = $('<thead></thead>');
+    $tableHeaderRow = $('<tr></tr>').appendTo($tableHeader);
+
+    elementOptions = {
+        'text':  'Friend name',
+        'class': 'friend-name'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text':  'Page Url',
+        'class': 'friend-url'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text':  'Select all',
+        'class': 'select-unselect centered'
+    };
+    $tableHead = $('<th></th>', elementOptions).data('status', 'false').appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'type':  'checkbox',
+        'class': 'select-all-'
+    };
+    $checkbox = $('<input></input>', elementOptions).on('click', selectUnselectFriends).appendTo($tableHead);
+
+    elementOptions = {
+        'text':  'Actions',
+        'class': 'centered friend-actions'
+    };
+    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    elementOptions = {
+        'text':  'Result of last action',
+        'class': 'centered friend-actions-result'
+    };
+    $tableHead = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+
+    return $tableHeader;
+}
+
+function loadFriendsToContentListHandler(friendsArray, tabId) {
     "use strict";
 
     var friendIndex,
@@ -291,13 +377,9 @@ function loadFriendsToContentAreaHandler(friendsArray, tab) {
         $progressBar,
         $friendsTable,
         $tableHeader,
-        $tableHeaderRow,
-        $checkbox,
-        $tableHead,
-        elementOptions,
-        temporaryelEmentOptions;
+        elementOptions;
 
-    $tab              = $('#' + tab);
+    $tab              = $('#' + tabId);
     $friendInfoHolder = $tab.children('div.friend-info');
     $progressHolder   = $tab.children('div.progress');
     $progressBar      = $progressHolder.children().eq(0);
@@ -305,80 +387,16 @@ function loadFriendsToContentAreaHandler(friendsArray, tab) {
     elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
     $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
 
-    $tableHeader    = $('<thead></thead>').appendTo($friendsTable);
-    $tableHeaderRow = $('<tr></tr>').appendTo($tableHeader);
-
-    elementOptions = {
-        'text'  : 'Friend name',
-        'class' : 'friend-name'
-    };
-    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
-
-    elementOptions = {
-        'text' : 'Page Url',
-        'class' : 'friend-url'
-    };
-    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
-
-    elementOptions = {
-        'text'  : 'Select all',
-        'class' : 'select-unselect centered'
-    };
-    $tableHead = $('<th></th>', elementOptions).data('status', 'false').appendTo($tableHeaderRow);
-
-    elementOptions = {
-        'type' : 'checkbox',
-        'id'   : 'select-all-' + tab
-    };
-    $checkbox = $('<input></input>', elementOptions).on('click', selectUnselectFriends).appendTo($tableHead);
-
-    elementOptions = {
-        'text'  : 'Actions',
-        'class' : 'centered friend-actions'
-    };
-    $tableHead     = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
-
-    elementOptions = {
-        'text'  : 'Result of last action',
-        'class' : 'centered friend-actions-result'
-    };
-    $tableHead = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
+    $tableHeader    = getFriendsTableHead().appendTo($friendsTable);
 
     for (friendIndex in friendsArray) {
         friend          = friendsArray[friendIndex];
         currentProgress = (friendsArray.length * friendIndex  / 100);
-        $tableRow       = buildFriendListRow(tab, friend);
+        $tableRow       = buildFriendListTableRow(tabId, friend);
 
         $friendsTable.append($tableRow);
         $progressBar.css('width', currentProgress + '%');
     }
-
-    $('.btn-invite-history').on('click', function (e) {
-        var $this                = $(e.currentTarget),
-            friendName           = $this.closest('tr').find('.friend_name').text(),
-            friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
-            $invitationsHistory  = $this.parent().find('.collapse');
-
-        if ($invitationsHistory.hasClass('in')) {
-            $invitationsHistory.popover('hide');
-            $invitationsHistory.collapse('hide');
-        }
-
-        $invitationsHistory.collapse('show');
-    });
-
-    $('.btn-new-message').on('click', function (e) {
-
-        var $this      = $(e.currentTarget),
-            friendName = $this.closest('tr').find('.friend_name').text(),
-            friendUid  = $this.closest('tr').find('.friend_url').data('friend-uid'),
-            $modal     = $('#newMessageModal');
-
-        $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
-        $modal.find('#friendUid').val(friendUid);
-
-        $('#newMessageModal').modal();
-    });
 
     $progressHolder.hide(function () {
         $friendInfoHolder.show();
@@ -390,16 +408,16 @@ function loadFriendsToContentAreaHandler(friendsArray, tab) {
 
     loadDateFromStorage(updateFriendsInforamtionLables);
 
-    $('#friends_members_of_the_group').on('loadFriendsToContentArea', function (e, friendsArray, tab) {
-        loadFriendsToContentAreaHandler(friendsArray, tab);
+    $('#friends_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
+        loadFriendsToContentListHandler(friendsArray, tabId);
     });
 
-    $('#friends_invited_to_the_group').on('loadFriendsToContentArea', function (e, friendsArray, tab) {
-        loadFriendsToContentAreaHandler(friendsArray, tab);
+    $('#friends_invited_to_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
+        loadFriendsToContentListHandler(friendsArray, tabId);
     });
 
-    $('#friends_not_members_of_the_group').on('loadFriendsToContentArea', function (e, friendsArray, tab) {
-        loadFriendsToContentAreaHandler(friendsArray, tab);
+    $('#friends_not_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
+        loadFriendsToContentListHandler(friendsArray, tabId);
     });
 
     // $('.btn-new-message').on('click', function (e) {

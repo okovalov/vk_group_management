@@ -38,6 +38,59 @@ function loadDateFromStorage(callback) {
     });
 }
 
+function loadFriendsToContentListHandler(friendsArray, tabId) {
+    "use strict";
+
+    var friendIndex,
+        friend,
+        currentProgress,
+        $tableRow,
+        $tab,
+        $friendInfoHolder,
+        $progressHolder,
+        $progressBar,
+        $friendsTable,
+        $tableHeader,
+        elementOptions;
+
+    $tab              = $('#' + tabId);
+    $friendInfoHolder = $tab.children('div.friend-info');
+    $progressHolder   = $tab.children('div.progress');
+    $progressBar      = $progressHolder.children().eq(0);
+
+    elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
+    $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
+
+    $tableHeader    = createFriendsTableHead().appendTo($friendsTable);
+
+    for (friendIndex in friendsArray) {
+        friend          = friendsArray[friendIndex];
+        currentProgress = (friendsArray.length * friendIndex  / 100);
+        $tableRow       = createFriendListTableRow(tabId, friend);
+
+        $friendsTable.append($tableRow);
+        $progressBar.css('width', currentProgress + '%');
+    }
+
+    $progressHolder.hide(function () {
+        $friendInfoHolder.show();
+    });
+}
+
+function onSelectUnselectFriendsClick(e) {
+    "use strict";
+
+    var cbx  = e.currentTarget,
+        $cbx = $(cbx),
+        $parent,
+        $checkboxes;
+
+    $parent     = $cbx.closest('table');
+    $checkboxes = $parent.find('.friend_checkbox input');
+
+    $checkboxes.prop('checked', cbx.checked);
+}
+
 function onSendMessageButtonClick(e) {
     "use strict";
 
@@ -50,6 +103,40 @@ function onSendMessageButtonClick(e) {
     $modal.find('#friendUid').val(friendUid);
 
     $('#newMessageModal').modal();
+}
+
+function onPostOnWallButtonClick(e) {
+    "use strict";
+
+    alert('onPostOnWallButtonClick');
+}
+
+function onMessagesHistoryButtonClick(e) {
+    "use strict";
+
+    alert('onMessagesHistoryButtonClick');
+}
+
+function onInviteButtonClick(e) {
+    "use strict";
+
+    alert('onInviteButtonClick');
+}
+
+function onInvitationsHistoryButtonClick(e) {
+    "use strict";
+
+    var $this                = $(e.currentTarget),
+        friendName           = $this.closest('tr').find('.friend_name').text(),
+        friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $invitationsHistory  = $this.parent().find('.collapse');
+
+    if ($invitationsHistory.hasClass('in')) {
+        $invitationsHistory.popover('hide');
+        $invitationsHistory.collapse('hide');
+    }
+
+    $invitationsHistory.collapse('show');
 }
 
 function createSendMessageButton() {
@@ -91,7 +178,7 @@ function createPostOnWallButton() {
         'title':       "Post on the wall"
     };
 
-    $postOnWallButtonHolder = $('<a></a>', elementOptions);
+    $postOnWallButtonHolder = $('<a></a>', elementOptions).on('click', onPostOnWallButtonClick);
     elementOptions          = {'class' : 'icon-share'};
     $postOnWallButton       = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolder);
 
@@ -112,7 +199,7 @@ function createMessagesHistoryButton() {
         'title':       "Messages history"
     };
 
-    $messagesHistoryButtonHolder = $('<a></a>', elementOptions);
+    $messagesHistoryButtonHolder = $('<a></a>', elementOptions).on('click', onMessagesHistoryButtonClick);
     elementOptions               = {'class' : 'icon-folder-open'};
     $messagesHistoryButton       = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolder);
 
@@ -132,27 +219,11 @@ function createInviteButton() {
         'title': "Invite to the group"
     };
 
-    $inviteButtonHolder = $('<a></a>', elementOptions);
+    $inviteButtonHolder = $('<a></a>', elementOptions).on('click', onInviteButtonClick);
     elementOptions      = {'class' : 'icon-plus'};
     $inviteButton       = $('<i></i>', elementOptions).appendTo($inviteButtonHolder);
 
     return $inviteButtonHolder;
-}
-
-function onInvitationsHistoryButtonClick(e) {
-    "use strict";
-
-    var $this                = $(e.currentTarget),
-        friendName           = $this.closest('tr').find('.friend_name').text(),
-        friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
-        $invitationsHistory  = $this.parent().find('.collapse');
-
-    if ($invitationsHistory.hasClass('in')) {
-        $invitationsHistory.popover('hide');
-        $invitationsHistory.collapse('hide');
-    }
-
-    $invitationsHistory.collapse('show');
 }
 
 function createInvitationsHistoryButton() {
@@ -226,11 +297,11 @@ function createActionButtonsGroup(tabId) {
     return $buttonsGroup;
 }
 
-function buildFriendListTableRow(tab, friend) {
+function createFriendListTableRow(tab, friend) {
     "use strict";
 
-    var $row,
-        $name,
+    var $tableRow,
+        $friendName,
         friendUrlString,
         $urlHolder,
         $url,
@@ -245,36 +316,40 @@ function buildFriendListTableRow(tab, friend) {
         $actionResult;
 
     elementOptions = {'class' : tab + '_friend_'};
-    $row           = $('<tr></tr>', elementOptions);
+    $tableRow      = $('<tr></tr>', elementOptions);
 
     elementOptions = {
         'class': 'friend_name',
         'text':  friend.first_name + ' ' + friend.last_name
     };
-    $name = $('<td></td>', elementOptions).appendTo($row);
+
+    $friendName = $('<td></td>', elementOptions).appendTo($tableRow);
 
     elementOptions = {
-        'class':           'friend_url',
+        'class':          'friend_url',
         'data-friend-uid': friend.uid
     };
-    $urlHolder = $('<td></td>', elementOptions).appendTo($row);
+
+    $urlHolder = $('<td></td>', elementOptions).appendTo($tableRow);
 
     friendUrlString = 'http://vk.com/id' + friend.uid;
+
     elementOptions  = {
         'text':   friendUrlString,
         'href':   friendUrlString,
         'target': '_blank'
     };
+
     $url = $('<a></a>', elementOptions).appendTo($urlHolder);
 
     elementOptions  = {'class' : 'friend_checkbox'};
-    $checkBoxHolder = $('<td></td>', elementOptions).appendTo($row);
+    $checkBoxHolder = $('<td></td>', elementOptions).appendTo($tableRow);
 
     elementOptions = {'type' : 'checkbox'};
     $checkbox      = $('<input></input>', elementOptions).appendTo($checkBoxHolder);
 
     elementOptions = {'class' : 'friend-actions'};
-    $btnHolder     = $('<td></td>', elementOptions).appendTo($row);
+    $btnHolder     = $('<td></td>', elementOptions).appendTo($tableRow);
 
     elementOptions = {'class' : 'btn-toolbar' };
     $btnToolbar    = $('<div></div>', elementOptions).appendTo($btnHolder);
@@ -282,7 +357,7 @@ function buildFriendListTableRow(tab, friend) {
     $btnGroup = createActionButtonsGroup(tab).appendTo($btnToolbar);
 
     elementOptions      = {'class' : 'friend-action-result'};
-    $actionResultHolder = $('<td></td>', elementOptions).appendTo($row);
+    $actionResultHolder = $('<td></td>', elementOptions).appendTo($tableRow);
 
     temporaryelEmentOptions = {
         'title'     : 'Details of the last action',
@@ -290,30 +365,18 @@ function buildFriendListTableRow(tab, friend) {
         'placement' : 'bottom'
 
     };
+
     elementOptions = {
         'class' : 'text-success',
         'text'  : 'Click for details'
     };
+
     $actionResult = $('<p></p>', elementOptions).popover(temporaryelEmentOptions).appendTo($actionResultHolder);
 
-    return $row;
+    return $tableRow;
 }
 
-function selectUnselectFriends(e) {
-    "use strict";
-
-    var cbx  = e.currentTarget,
-        $cbx = $(cbx),
-        $parent,
-        $checkboxes;
-
-    $parent     = $cbx.closest('table');
-    $checkboxes = $parent.find('.friend_checkbox input');
-
-    $checkboxes.prop('checked', cbx.checked);
-}
-
-function getFriendsTableHead() {
+function createFriendsTableHead() {
     "use strict";
 
     var $tableHeader,
@@ -347,7 +410,7 @@ function getFriendsTableHead() {
         'type':  'checkbox',
         'class': 'select-all-'
     };
-    $checkbox = $('<input></input>', elementOptions).on('click', selectUnselectFriends).appendTo($tableHead);
+    $checkbox = $('<input></input>', elementOptions).on('click', onSelectUnselectFriendsClick).appendTo($tableHead);
 
     elementOptions = {
         'text':  'Actions',
@@ -362,45 +425,6 @@ function getFriendsTableHead() {
     $tableHead = $('<th></th>', elementOptions).appendTo($tableHeaderRow);
 
     return $tableHeader;
-}
-
-function loadFriendsToContentListHandler(friendsArray, tabId) {
-    "use strict";
-
-    var friendIndex,
-        friend,
-        currentProgress,
-        $tableRow,
-        $tab,
-        $friendInfoHolder,
-        $progressHolder,
-        $progressBar,
-        $friendsTable,
-        $tableHeader,
-        elementOptions;
-
-    $tab              = $('#' + tabId);
-    $friendInfoHolder = $tab.children('div.friend-info');
-    $progressHolder   = $tab.children('div.progress');
-    $progressBar      = $progressHolder.children().eq(0);
-
-    elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
-    $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
-
-    $tableHeader    = getFriendsTableHead().appendTo($friendsTable);
-
-    for (friendIndex in friendsArray) {
-        friend          = friendsArray[friendIndex];
-        currentProgress = (friendsArray.length * friendIndex  / 100);
-        $tableRow       = buildFriendListTableRow(tabId, friend);
-
-        $friendsTable.append($tableRow);
-        $progressBar.css('width', currentProgress + '%');
-    }
-
-    $progressHolder.hide(function () {
-        $friendInfoHolder.show();
-    });
 }
 
 (function ($) {

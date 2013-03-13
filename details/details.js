@@ -23,6 +23,7 @@ function loadDateFromStorage(callback) {
         }
 
         friendsMembersOfTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+
         // TODO - remove it later. Temporaty use to show some data!
         // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
         friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
@@ -36,93 +37,155 @@ function loadDateFromStorage(callback) {
     });
 }
 
+function createSendMessageButton() {
+    "use strict";
+
+    var elementOptions,
+        $sendMessageButtonHolder,
+        $sendMessageButton;
+
+    elementOptions = {
+        'class':       'btn btn-new-message',
+        'href':        '#',
+        'data-toggle': "tooltip",
+        'title':       "Send a message"
+    };
+
+    $sendMessageButtonHolder = $('<a></a>', elementOptions);
+    elementOptions           = {'class' : 'icon-envelope'};
+    $sendMessageButton       = $('<i></i>', elementOptions).appendTo($sendMessageButtonHolder);
+
+    return $sendMessageButtonHolder;
+}
+
+function createPostOnWallButton() {
+    "use strict";
+
+    var elementOptions,
+        $postOnWallButtonHolder,
+        $postOnWallButton;
+
+    elementOptions = {
+        'class':       'btn',
+        'href':        '#',
+        'data-toggle': "tooltip",
+        'title':       "Post on the wall"
+    };
+
+    $postOnWallButtonHolder = $('<a></a>', elementOptions);
+    elementOptions          = {'class' : 'icon-share'};
+    $postOnWallButton       = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolder);
+
+    return $postOnWallButtonHolder;
+}
+
+function createMessagesHistoryButton() {
+    "use strict";
+
+    var elementOptions,
+        $messagesHistoryButtonHolder,
+        $messagesHistoryButton;
+
+    elementOptions = {
+        'class':       'btn',
+        'href':        '#',
+        'data-toggle': "tooltip",
+        'title':       "Messages history"
+    };
+
+    $messagesHistoryButtonHolder = $('<a></a>', elementOptions);
+    elementOptions               = {'class' : 'icon-folder-open'};
+    $messagesHistoryButton       = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolder);
+
+    return $messagesHistoryButtonHolder;
+}
+
+function createInviteButton() {
+    "use strict";
+
+    var elementOptions,
+        $inviteButtonHolder,
+        $inviteButton;
+
+    elementOptions = {
+        'class': 'btn',
+        'href':  '#',
+        'title': "Invite to the group"
+    };
+
+    $inviteButtonHolder = $('<a></a>', elementOptions);
+    elementOptions      = {'class' : 'icon-plus'};
+    $inviteButton       = $('<i></i>', elementOptions).appendTo($inviteButtonHolder);
+
+    return $inviteButtonHolder;
+}
+
+function createInvitationsHistoryButton() {
+    "use strict";
+
+    var elementOptions,
+        $invitationsHistoryButton,
+        $invitationsHistoryButtonHolder;
+
+    elementOptions = {
+        'class': 'btn btn-invite-history',
+        'href':  '#',
+        'title': "Invitations history"
+    };
+
+    $invitationsHistoryButtonHolder = $('<a></a>', elementOptions);
+    elementOptions                  = {'class' : 'icon-question-sign'};
+    $invitationsHistoryButton       = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolder);
+
+    return $invitationsHistoryButtonHolder;
+}
+
+function createInvitationsHistoryElement() {
+    "use strict";
+
+    var elementOptions,
+        temporaryelEmentOptions,
+        $invitationsHistoryElement;
+
+    temporaryelEmentOptions = {
+        'title':     'Invitations history',
+        'content':   'Nothing to say for now',
+        'placement': 'bottom'
+    };
+
+    elementOptions = {
+        'class': "collapse",
+        'text':  "Invited 10 times - click for details"
+    };
+
+    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
+
+    return $invitationsHistoryElement;
+}
 
 function getActionsList(tab) {
     "use strict";
 
     var $buttonsGroup,
-        $sendMessageButtonHolder,
         $sendMessageButton,
-        $postOnWallButtonHolder,
         $postOnWallButton,
-        $inviteButtonHolder,
-        $inviteButton,
-        $invitationsHistory,
-        $invitationsHistoryButtonHolder,
-        $invitationsHistoryButton,
-        $messagesHistoryButtonHolder,
         $messagesHistoryButton,
-        elementOptions,
-        temporaryelEmentOptions;
+        $inviteButton,
+        $invitationsHistoryElement,
+        $invitationsHistoryButton,
+        elementOptions;
 
     elementOptions = {'class' : 'btn-group'};
     $buttonsGroup  = $('<div></div>', elementOptions);
 
-    elementOptions = {
-        'class'       : 'btn btn-new-message',
-        'href'        : '#',
-        'data-toggle' : "tooltip",
-        'title'       : "Send a message"
-    };
-    $sendMessageButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
-
-    elementOptions     = {'class' : 'icon-envelope'};
-    $sendMessageButton = $('<i></i>', elementOptions).appendTo($sendMessageButtonHolder);
-
-    elementOptions = {
-        'class'       : 'btn',
-        'href'        : '#',
-        'data-toggle' : "tooltip",
-        'title'       : "Post on the wall"
-    };
-    $postOnWallButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
-
-    elementOptions    = {'class' : 'icon-share'};
-    $postOnWallButton = $('<i></i>', elementOptions).appendTo($postOnWallButtonHolder);
-
-    elementOptions = {
-        'class'       : 'btn',
-        'href'        : '#',
-        'data-toggle' : "tooltip",
-        'title'       : "Messages history"
-    };
-    $messagesHistoryButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
-
-    elementOptions         = {'class' : 'icon-folder-open'};
-    $messagesHistoryButton = $('<i></i>', elementOptions).appendTo($messagesHistoryButtonHolder);
+    $sendMessageButton     = createSendMessageButton().appendTo($buttonsGroup);
+    $postOnWallButton      = createPostOnWallButton().appendTo($buttonsGroup);
+    $messagesHistoryButton = createMessagesHistoryButton().appendTo($buttonsGroup);
 
     if (tab === 'tab3') {
-
-        elementOptions = {
-            'class' : 'btn',
-            'href'  : '#',
-            'title' : "Invite to the group"
-        };
-        $inviteButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
-
-        elementOptions = {'class' : 'icon-plus'};
-        $inviteButton  = $('<i></i>', elementOptions).appendTo($inviteButtonHolder);
-
-        elementOptions                  = {
-            'class' : 'btn btn-invite-history',
-            'href'  : '#',
-            'title' : "Invitations history"
-        };
-        $invitationsHistoryButtonHolder = $('<a></a>', elementOptions).appendTo($buttonsGroup);
-
-        elementOptions            = {'class' : 'icon-question-sign'};
-        $invitationsHistoryButton = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolder);
-
-        temporaryelEmentOptions = {
-            'title'     : 'Invitations history',
-            'content'   : 'Nothing to say for now',
-            'placement' : 'bottom'
-        };
-        elementOptions = {
-            'class' : "collapse",
-            'text'  : "Invited 10 times - click for details"
-        };
-        $invitationsHistory = $('<div></div>', elementOptions).popover(temporaryelEmentOptions).appendTo($buttonsGroup);
+        $inviteButton              = createInviteButton().appendTo($buttonsGroup);
+        $invitationsHistoryButton  = createInvitationsHistoryButton().appendTo($buttonsGroup);
+        $invitationsHistoryElement = createInvitationsHistoryElement().appendTo($buttonsGroup);
     }
 
     return $buttonsGroup;

@@ -76,9 +76,10 @@ function saveFriendsDataToSotrage() {
         'friendsMembersOfTheGroup' : friendsMembersOfTheGroup,
         'friendsNotMembersOfTheGroup' : friendsNotMembersOfTheGroup,
         'friendsInvitedToTheGroup' : friendsInvitedToTheGroup
-    }
+    };
 
     chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
+
     });
 }
 
@@ -87,11 +88,7 @@ function updateFriendsDataLables() {
     appendToBody('p', 'innerHTML', 'Friends - invited to the group count: ' + friendsInvitedToTheGroup.length);
     appendToBody('p', 'innerHTML', 'Friends - not members of the group count: ' + friendsNotMembersOfTheGroup.length);
 
-    document.getElementById('wrap-done').style.display = '';
-    document.getElementById('wrap-done').style.hidden = '';
-
-    document.getElementById('wrap').style.display = 'none';
-    document.getElementById('wrap').style.hidden = 'hidden';
+    showDoneWrapHideLoadingWrap();
 }
 
 function getNextFriendInfo(idx, gid) {
@@ -115,7 +112,8 @@ function checkFriendIsInGroupCallback(additionalParameters, e) {
         friendInfo,
         friend,
         idx = additionalParameters.idx,
-        gid = additionalParameters.gid;
+        gid = additionalParameters.gid,
+        tmpFriend;
 
     if (answer.error !== undefined) {
         handleError(answer.error);
@@ -125,18 +123,19 @@ function checkFriendIsInGroupCallback(additionalParameters, e) {
 
     friendInfo = answer.response;
     friend     = friendsListGlobal[idx];
+    tmpFriend  = {'uid': friend.uid, 'first_name': friend.first_name, 'last_name': friend.last_name};
 
     if (friendInfo.member === 1) {
-        friendsMembersOfTheGroup.push(friend);
+        friendsMembersOfTheGroup.push(tmpFriend);
 
         return getNextFriendInfo(idx, gid);
     }
 
     if (friendInfo.invited !== undefined) {
-        friendsInvitedToTheGroup.push(friend);
+        friendsInvitedToTheGroup.push(friendsListGlobal[idx]);
     }
 
-    friendsNotMembersOfTheGroup.push(friend);
+    friendsNotMembersOfTheGroup.push(tmpFriend);
 
     return getNextFriendInfo(idx, gid);
 }
@@ -160,14 +159,25 @@ function checkFriendIsInGroup(idx, gid) {
     vkApiInstance.get('groups.isMember', checkFriendIsInGroupCallback, this, parameters, additionalParameters);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    "use strict";
+function showDoneWrapHideLoadingWrap() {
+    document.getElementById('wrap-done').style.display = '';
+    document.getElementById('wrap-done').style.hidden = '';
 
-    document.getElementById('wrap').style.display = '';
-    document.getElementById('wrap').style.hidden = '';
+    document.getElementById('wrap').style.display = 'none';
+    document.getElementById('wrap').style.hidden = 'hidden';
+}
+
+function hideDoneWrapShowLoadingWrap() {
 
     document.getElementById('wrap-done').style.display = 'none';
     document.getElementById('wrap-done').style.hidden = 'hidden';
+
+    document.getElementById('wrap').style.display = '';
+    document.getElementById('wrap').style.hidden = '';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    "use strict";
 
     document.getElementById('details_page_link').addEventListener('click', function () {
 
@@ -175,6 +185,22 @@ document.addEventListener('DOMContentLoaded', function () {
             window.close();
         });
 
+    });
+
+    document.getElementById('reload_friends_list').addEventListener('click', function () {
+
+        clearBodyContent();
+        hideDoneWrapShowLoadingWrap();
+        requestAuthentication();
+
+        return;
+    });
+
+    document.getElementById('open_in_a_tab').addEventListener('click', function () {
+
+        chrome.tabs.create({url: 'popup.html', selected: true}, function (tab) {
+            window.close();
+        });
     });
 
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {

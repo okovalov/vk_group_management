@@ -16,10 +16,10 @@ var vkGlobalAccessToken,
             request.send(null);
         };
     },
-    vkApiInstance = new VkApi(),
     membersListGlobal,
     friendsListGlobal,
-    friendsMembersOfTheGroup = [],
+    vkApiInstance               = new VkApi(),
+    friendsMembersOfTheGroup    = [],
     friendsNotMembersOfTheGroup = [],
-    friendsInvitedToTheGroup = [],
-    vkGroupId = 49912690;
+    friendsInvitedToTheGroup    = [],
+    vkGroupId                   = 49912690;

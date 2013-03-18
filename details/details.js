@@ -25,8 +25,22 @@ function loadDateFromStorage(callback) {
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
 
         if (items.vk_gm_all_friends_data.friendsListGlobal === undefined) {
+
             return;
         }
+
+        chrome.storage.local.get({'vk_access_token': {}}, function (items) {
+
+            if (items.vk_access_token.length === undefined) {
+
+                requestAuthentication();
+
+                return;
+            }
+
+            vkGlobalAccessToken = items.vk_access_token;
+
+        });
 
         friendsMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
 
@@ -468,12 +482,42 @@ function createFriendsTableHead() {
     return $tableHeader;
 }
 
+function sendMessageHandler(additionalParameters, e) {
+    "use strict";
+
+    var answer             = JSON.parse(e.target.response),
+        callback           = additionalParameters.callback,
+        actionResultHolder = additionalParameters.actionResultHolder,
+        contentMessage,
+        contentClass = 'text-success';
+
+    if (answer.error !== undefined) {
+        contentMessage = answer.error.error_msg;
+        contentClass   = 'text-error';
+    }
+
+    callback(actionResultHolder, contentClass, contentMessage);
+
+}
+
 function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
     "use strict";
 
+    //messages.send
+    //
+    var parameters = {
+        'access_token' : vkGlobalAccessToken,
+        'uid'          : friendUid,
+        'message'      : messageText,
+        'title'        : 'test message title'
+    };
+
+    vkApiInstance.get('messages.send', sendMessageHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder});
+
+
     //alert('Sending message to ' + friendUid);
     //alert('messageText ' + messageText);
-    callback($actionResultHolder);
+//    callback($actionResultHolder, contentClass, contentMessage);
 }
 
 (function ($) {
@@ -506,8 +550,8 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
 
         $parent.find('button:first-child').trigger('click', $message);
 
-        sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder) {
-            updateActionResult($actionResultHolder, 'text-error', 'content of message');
+        sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
+            updateActionResult($actionResultHolder, contentClass, contentMessage);
         });
 
     });

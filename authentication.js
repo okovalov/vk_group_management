@@ -43,7 +43,7 @@ function requestAuthentication() {
     var vkAuthenticationUrl      = 'https://oauth.vk.com/authorize',
         vkCLientId               = '3470032',
         // vkCLientId               = '3315996',
-        vkRequestedScopes        = 'docs,offline,friends,groups',
+        vkRequestedScopes        = 'docs,offline,friends,groups,messages',
         authenticationParameters = {
             'client_id'     : vkCLientId,
             'scope'         : vkRequestedScopes,

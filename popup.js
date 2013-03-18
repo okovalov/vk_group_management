@@ -1,5 +1,12 @@
 /*global document, chrome, alert, XMLHttpRequest */
 
+/**
+ * @author    Oleksandr Kovalov <oleksandrk@nationalfibre.net>
+ * @copyright 2013 Oleksandr Kovalov
+ * @license   http://spdx.org/licenses/MIT MIT License
+ * @link      https://github.com/...
+ */
+
 function updateRequestedFriendNumber(idx) {
     document.getElementById('current_friend_number').innerHTML = idx + 1;
 }

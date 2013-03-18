@@ -22,4 +22,6 @@ var vkGlobalAccessToken,
     friendsMembersOfTheGroup    = [],
     friendsNotMembersOfTheGroup = [],
     friendsInvitedToTheGroup    = [],
-    vkGroupId                   = 49912690;
+    // vkGroupId                   = 49912690;
+    // vkGroupId                   = 6462607;
+    vkGroupId                      = 51174068;

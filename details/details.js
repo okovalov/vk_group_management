@@ -96,16 +96,41 @@ function onSelectUnselectFriendsClick(e) {
     $checkboxes.prop('checked', cbx.checked);
 }
 
+function updateActionResult($actionResultHolder, contentClass, contentMessage) {
+    "use strict";
+
+    var temporaryelEmentOptions,
+        elementOptions,
+        $actionResult;
+
+    temporaryelEmentOptions = {
+        'title'     : 'Details of the last action',
+        'content'   : contentMessage,
+        'placement' : 'bottom'
+    };
+
+    elementOptions = {
+        'class' : contentClass,
+        'text'  : 'Click for details'
+    };
+
+    $actionResult = $('<p></p>', elementOptions).popover(temporaryelEmentOptions);
+    $actionResultHolder.empty().append($actionResult);
+}
+
 function onSendMessageButtonClick(e) {
     "use strict";
 
-    var $this      = $(e.currentTarget),
-        friendName = $this.closest('tr').find('.friend_name').text(),
-        friendUid  = $this.closest('tr').find('.friend_url').data('friend-uid'),
-        $modal     = $('#newMessageModal');
+    var $this               = $(e.currentTarget),
+        friendName          = $this.closest('tr').find('.friend_name').text(),
+        friendUid           = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $actionResultHolder = $this.closest('tr').find('.friend-action-result'),
+        $modal              = $('#newMessageModal');
+
 
     $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
     $modal.find('#friendUid').val(friendUid);
+    $modal.data('actionResultHolder', $actionResultHolder);
 
     $('#newMessageModal').modal();
 }
@@ -443,6 +468,14 @@ function createFriendsTableHead() {
     return $tableHeader;
 }
 
+function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
+    "use strict";
+
+    //alert('Sending message to ' + friendUid);
+    //alert('messageText ' + messageText);
+    callback($actionResultHolder);
+}
+
 (function ($) {
     "use strict";
 
@@ -458,6 +491,25 @@ function createFriendsTableHead() {
 
     $('#friends_not_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
         loadFriendsToContentListHandler(friendsArray, tabId);
+    });
+
+    $('#newMessageModal').find('button:first-child').on('click', function (e, messageArea) {
+        $(messageArea).val('');
+    });
+
+    $('#newMessageModal').find('.btn-primary').on('click', function (e) {
+        var $parent = $(this).parent().parent(),
+            $actionResultHolder = $parent.data('actionResultHolder'),
+            friendUid           = $parent.find('#friendUid').val(),
+            $message            = $parent.find('.message'),
+            messageText         = $message.val();
+
+        $parent.find('button:first-child').trigger('click', $message);
+
+        sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder) {
+            updateActionResult($actionResultHolder, 'text-error', 'content of message');
+        });
+
     });
 
     // $('.btn-new-message').on('click', function (e) {

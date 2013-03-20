@@ -5,7 +5,8 @@
     "version": "1.0.1",
     "background": {
         "scripts": [
-            "background.js"
+            "background.js",
+            "functions.js"
         ],
         "persistent": false
     },

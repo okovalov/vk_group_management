@@ -1,47 +1,6 @@
 /*global require, chrome, alert */
 
 /**
- * Display an alert with an error message, description
- *
- * @param  {string} textToShow  Error message text
- * @param  {string} errorToShow Error to show
- */
-function displayeAnError(textToShow, errorToShow) {
-    "use strict";
-
-    alert(textToShow + '\n' + errorToShow);
-}
-
-/**
- * Retrieve a value of a parameter from the given URL string
- *
- * @param  {string} url           Url string
- * @param  {string} parameterName Name of the parameter
- *
- * @return {string}               Value of the parameter
- */
-function getUrlParameterValue(url, parameterName) {
-    "use strict";
-
-    var urlParameters  = url.substr(url.indexOf("#") + 1),
-        parameterValue = "",
-        index,
-        temp;
-
-    urlParameters = urlParameters.split("&");
-
-    for (index = 0; index < urlParameters.length; index += 1) {
-        temp = urlParameters[index].split("=");
-
-        if (temp[0] === parameterName) {
-            return temp[1];
-        }
-    }
-
-    return parameterValue;
-}
-
-/**
  * Chrome tab update listener handler. Return a function which is used as a listener itself by chrome.tabs.obUpdated
  *
  * @param  {string} authenticationTabId Id of the tab which is waiting for grant of permissions for the application

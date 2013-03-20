@@ -6,7 +6,9 @@
     "background": {
         "scripts": [
             "background.js",
-            "functions.js"
+            "functions.js",
+            "authentication.js",
+            "global.js"
         ],
         "persistent": false
     },

@@ -1,5 +1,20 @@
 /*global document, chrome, alert, XMLHttpRequest */
 
+function setVkAccessToken(vkAccessToken, tabId) {
+    chrome.storage.local.set({'vk_access_token': vkAccessToken}, function () {
+        vkGlobalAccessToken = vkAccessToken;
+
+        chrome.tabs.update(
+            tabId,
+            {
+                'url'   : 'hello.html',
+                'active': true
+            },
+            function (tab) {}
+        );
+    });
+}
+
 function authenticationListener(authenticationTabId) {
     "use strict";
 
@@ -27,17 +42,13 @@ function authenticationListener(authenticationTabId) {
                     return;
                 }
 
-                chrome.storage.local.set({'vk_access_token': vkAccessToken}, function () {
-                    vkGlobalAccessToken = vkAccessToken;
-
-                    getFriendsList();
-                });
+                setVkAccessToken(vkAccessToken, tabId);
             }
         }
     };
 }
 
-function requestAuthentication() {
+function requestAuthentication(tabId) {
     "use strict";
 
     var vkAuthenticationUrl      = 'https://oauth.vk.com/authorize',
@@ -55,25 +66,25 @@ function requestAuthentication() {
 
     vkAuthenticationUrl += urlParameters;
 
-    // chrome.storage.local.remove('vk_access_token');
-    // vkGlobalAccessToken = undefined;
-
-    if (vkGlobalAccessToken !== undefined) {
-        getFriendsList();
-    }
-
     chrome.storage.local.get({'vk_access_token': {}}, function (items) {
 
         if (items.vk_access_token.length === undefined) {
-            chrome.tabs.create({url: vkAuthenticationUrl, selected: true}, function (authenticationTab) {
-                chrome.tabs.onUpdated.addListener(authenticationListener(authenticationTab.id));
-            });
+
+            chrome.tabs.update(
+                tabId,
+                {
+                    'url'   : vkAuthenticationUrl,
+                    'active': true
+                },
+                function (tab) {
+                    chrome.tabs.onUpdated.addListener(authenticationListener(tab.id));
+                }
+            );
 
             return;
         }
 
-        vkGlobalAccessToken = items.vk_access_token;
-
-        getFriendsList();
+        setVkAccessToken(items.vk_access_token, tabId);
     });
 }
+

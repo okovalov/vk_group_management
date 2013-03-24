@@ -187,7 +187,9 @@ function hideDoneWrapShowLoadingWrap() {
     document.getElementById('wrap').style.hidden = '';
 }
 
-function reloadFriendsList() {
+function onReloadFriendsListLinkClick() {
+    "use strict";
+
     clearBodyContent();
     hideDoneWrapShowLoadingWrap();
     getFriendsList();
@@ -195,34 +197,31 @@ function reloadFriendsList() {
     return;
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+function onDetailsPageLinkClick() {
     "use strict";
 
-    getAuthenticated();
+    chrome.tabs.getCurrent(function (tab) {
 
-    document.getElementById('details_page_link').addEventListener('click', function () {
+        chrome.tabs.update(
+            tab.id,
+            {
+                'url'   : 'details/details.html',
+                'active': true
+            },
+            function (tab) {}
+        );
 
-        chrome.tabs.getCurrent(function (tab) {
-
-            chrome.tabs.update(
-                tab.id,
-                {
-                    'url'   : 'details/details.html',
-                    'active': true
-                },
-                function (tab) {}
-            );
-
-        });
     });
+}
 
-    document.getElementById('logout').addEventListener('click', function () {
-        chrome.storage.local.remove('vk_access_token');
-        vkGlobalAccessToken = undefined;
-        window.close();
-    });
+function onLogoutLinkClick() {
+    chrome.storage.local.remove('vk_access_token');
+    vkGlobalAccessToken = undefined;
+    window.close();
+}
 
-    document.getElementById('reload_friends_list').addEventListener('click', reloadFriendsList);
+function loadDateFromStorage(callback) {
+    "use strict";
 
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
 
@@ -241,5 +240,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         updateFriendsDataLables();
     });
-});
 
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    "use strict";
+
+    document.getElementById('details_page_link').addEventListener('click', onDetailsPageLinkClick);
+    document.getElementById('logout').addEventListener('click', onLogoutLinkClick);
+    document.getElementById('reload_friends_list').addEventListener('click', onReloadFriendsListLinkClick);
+
+
+    getAuthenticated(loadDateFromStorage);
+
+    // chrome.tabs.getSelected(null, function(tab) {
+    //   chrome.tabs.sendMessage(tab.id, {greeting: "hello"}, function(response) {
+    //     console.log(response.farewell);
+    //   });
+    // });
+
+});

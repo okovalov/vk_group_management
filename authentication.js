@@ -77,7 +77,7 @@ function requestAuthentication(tabId) {
                     'active': true
                 },
                 function (tab) {
-                    chrome.tabs.onUpdated.addListener(authenticationListener(tab.id));
+                    chrome.tabs.onUpdated.addListener(authenticationListener(tab.id))
                 }
             );
 
@@ -88,7 +88,7 @@ function requestAuthentication(tabId) {
     });
 }
 
-function getAuthenticated() {
+function getAuthenticated(callback) {
     "use strict";
 
     chrome.storage.local.get({'vk_access_token': {}}, function (items) {
@@ -102,7 +102,7 @@ function getAuthenticated() {
         }
 
         vkGlobalAccessToken = items.vk_access_token;
-
+        callback();
     });
 }
 

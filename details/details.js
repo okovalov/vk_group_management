@@ -523,7 +523,10 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
 (function ($) {
     "use strict";
 
-    loadDateFromStorage(updateFriendsInforamtionLables);
+    getAuthenticated(function () {
+        loadDateFromStorage(updateFriendsInforamtionLables);
+    });
+
 
     $('#friends_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
         loadFriendsToContentListHandler(friendsArray, tabId);

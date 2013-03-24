@@ -7,3 +7,4 @@ chrome.browserAction.onClicked.addListener(function () {
         requestAuthentication(tab.id);
     });
 });
+

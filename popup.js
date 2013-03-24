@@ -217,7 +217,10 @@ function onDetailsPageLinkClick() {
 function onLogoutLinkClick() {
     chrome.storage.local.remove('vk_access_token');
     vkGlobalAccessToken = undefined;
-    window.close();
+
+    chrome.tabs.getCurrent(function (tab) {
+        chrome.tabs.remove(tab.id);
+    });
 }
 
 function loadDateFromStorage(callback) {
@@ -252,11 +255,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     getAuthenticated(loadDateFromStorage);
-
-    // chrome.tabs.getSelected(null, function(tab) {
-    //   chrome.tabs.sendMessage(tab.id, {greeting: "hello"}, function(response) {
-    //     console.log(response.farewell);
-    //   });
-    // });
-
 });

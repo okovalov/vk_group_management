@@ -48,7 +48,7 @@ function authenticationListener(authenticationTabId) {
     };
 }
 
-function requestAuthentication(tabId) {
+function requestAuthentication(tabId, idToRemove, callback) {
     "use strict";
 
     var vkAuthenticationUrl      = 'https://oauth.vk.com/authorize',
@@ -70,6 +70,7 @@ function requestAuthentication(tabId) {
 
         if (items.vk_access_token.length === undefined) {
 
+
             chrome.tabs.update(
                 tabId,
                 {
@@ -78,6 +79,10 @@ function requestAuthentication(tabId) {
                 },
                 function (tab) {
                     chrome.tabs.onUpdated.addListener(authenticationListener(tab.id))
+
+                    if (callback !== undefined) {
+                        callback(idToRemove);
+                    }
                 }
             );
 
@@ -91,11 +96,19 @@ function requestAuthentication(tabId) {
 function getAuthenticated(callback) {
     "use strict";
 
+    var idToRemove;
+
     chrome.storage.local.get({'vk_access_token': {}}, function (items) {
 
         if (items.vk_access_token.length === undefined) {
             chrome.tabs.getCurrent(function (tab) {
-                requestAuthentication(tab.id);
+                idToRemove = tab.id;
+                chrome.tabs.create({url: "loading.html"}, function (tab) {
+                    requestAuthentication(tab.id, idToRemove, function(idToRemove) {
+                        chrome.tabs.remove(idToRemove, function () {
+                        });
+                    });
+                });
             });
 
             return;

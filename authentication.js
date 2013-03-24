@@ -7,7 +7,7 @@ function setVkAccessToken(vkAccessToken, tabId) {
         chrome.tabs.update(
             tabId,
             {
-                'url'   : 'hello.html',
+                'url'   : 'popup.html',
                 'active': true
             },
             function (tab) {}
@@ -87,4 +87,23 @@ function requestAuthentication(tabId) {
         setVkAccessToken(items.vk_access_token, tabId);
     });
 }
+
+function getAuthenticated() {
+    "use strict";
+
+    chrome.storage.local.get({'vk_access_token': {}}, function (items) {
+
+        if (items.vk_access_token.length === undefined) {
+            chrome.tabs.getCurrent(function (tab) {
+                requestAuthentication(tab.id);
+            });
+
+            return;
+        }
+
+        vkGlobalAccessToken = items.vk_access_token;
+
+    });
+}
+
 

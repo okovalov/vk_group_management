@@ -113,11 +113,11 @@ function onSelectUnselectFriendsClick(e) {
 function updateActionResult($actionResultHolder, contentClass, contentMessage) {
     "use strict";
 
-    var temporaryelEmentOptions,
+    var temporaryElementOptions,
         elementOptions,
         $actionResult;
 
-    temporaryelEmentOptions = {
+    temporaryElementOptions = {
         'title'     : 'Details of the last action',
         'content'   : contentMessage,
         'placement' : 'bottom'
@@ -128,8 +128,8 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
         'text'  : 'Click for details'
     };
 
-    $actionResult = $('<p></p>', elementOptions).popover(temporaryelEmentOptions);
-    $actionResultHolder.empty().append($actionResult);
+    $actionResultHolder.empty()
+    $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
 }
 
 function onSendMessageButtonClick(e) {
@@ -305,10 +305,10 @@ function createInvitationsHistoryElement() {
     "use strict";
 
     var elementOptions,
-        temporaryelEmentOptions,
+        temporaryElementOptions,
         $invitationsHistoryElement;
 
-    temporaryelEmentOptions = {
+    temporaryElementOptions = {
         'title':     'Invitations history',
         'content':   'Nothing to say for now',
         'placement': 'bottom'
@@ -319,7 +319,7 @@ function createInvitationsHistoryElement() {
         'text':  "Invited 10 times - click for details"
     };
 
-    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryelEmentOptions);
+    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryElementOptions);
 
     return $invitationsHistoryElement;
 }
@@ -367,7 +367,7 @@ function createFriendListTableRow(tab, friend) {
         $btnGroup,
         $actionResultHolder,
         elementOptions,
-        temporaryelEmentOptions,
+        temporaryElementOptions,
         $actionResult;
 
     elementOptions = {'class' : tab + '_friend_'};
@@ -414,7 +414,7 @@ function createFriendListTableRow(tab, friend) {
     elementOptions      = {'class' : 'friend-action-result'};
     $actionResultHolder = $('<td></td>', elementOptions).appendTo($tableRow);
 
-    temporaryelEmentOptions = {
+    temporaryElementOptions = {
         'title'     : 'Details of the last action',
         'content'   : 'Nothing to say for now',
         'placement' : 'bottom'
@@ -426,7 +426,7 @@ function createFriendListTableRow(tab, friend) {
         'text'  : 'Click for details'
     };
 
-    $actionResult = $('<p></p>', elementOptions).popover(temporaryelEmentOptions).appendTo($actionResultHolder);
+    $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
 
     return $tableRow;
 }
@@ -488,15 +488,16 @@ function sendMessageHandler(additionalParameters, e) {
     var answer             = JSON.parse(e.target.response),
         callback           = additionalParameters.callback,
         actionResultHolder = additionalParameters.actionResultHolder,
-        contentMessage,
-        contentClass = 'text-success';
+        contentMessage     = 'message has been sent successfully',
+        contentClass       = 'text-success',
+        actionTime         = new Date();
 
     if (answer.error !== undefined) {
         contentMessage = answer.error.error_msg;
         contentClass   = 'text-error';
     }
 
-    callback(actionResultHolder, contentClass, contentMessage);
+    callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
 
 }
 

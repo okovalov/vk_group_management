@@ -498,14 +498,11 @@ function sendMessageHandler(additionalParameters, e) {
     }
 
     callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
-
 }
 
 function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
     "use strict";
 
-    //messages.send
-    //
     var parameters = {
         'access_token' : vkGlobalAccessToken,
         'uid'          : friendUid,
@@ -514,11 +511,39 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
     };
 
     vkApiInstance.get('messages.send', sendMessageHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder});
+}
 
+function getHistoryHandler(additionalParameters, e) {
+    "use strict";
 
-    //alert('Sending message to ' + friendUid);
-    //alert('messageText ' + messageText);
-//    callback($actionResultHolder, contentClass, contentMessage);
+    var answer             = JSON.parse(e.target.response),
+        callback           = additionalParameters.callback,
+        friendUid           = additionalParameters.friendUid,
+        actionResultHolder = additionalParameters.actionResultHolder,
+        historyHolder      = additionalParameters.historyHolder,
+        contentMessage     = 'messages history has been retrieved successfully',
+        contentClass       = 'text-success',
+        actionTime         = new Date();
+
+    if (answer.error !== undefined) {
+        contentMessage = answer.error.error_msg;
+        contentClass   = 'text-error';
+    }
+
+    callback(friendUid, answer, actionResultHolder, historyHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
+}
+
+function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, callback) {
+    "use strict";
+
+    var parameters = {
+        'access_token' : vkGlobalAccessToken,
+        'uid'          : friendUid,
+        'offset'       : messageOffset,
+        'count'        : messageCount
+    };
+
+    vkApiInstance.get('messages.getHistory', getHistoryHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder, 'historyHolder': $historyHolder, 'friendUid' : friendUid});
 }
 
 (function ($) {
@@ -527,7 +552,6 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
     getAuthenticated(function () {
         loadDateFromStorage(updateFriendsInforamtionLables);
     });
-
 
     $('#friends_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
         loadFriendsToContentListHandler(friendsArray, tabId);
@@ -543,6 +567,36 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
 
     $('#newMessageModal').find('button:first-child').on('click', function (e, messageArea) {
         $(messageArea).val('');
+    });
+
+    $('#newMessageModal').on('shown', function () {
+        var $parent = $(this),
+            $actionResultHolder = $parent.data('actionResultHolder'),
+            friendUid           = $parent.find('#friendUid').val(),
+            messageOffset       = 0,
+            messageCount        = 10,
+            $historyHolder     = $($parent.find('textarea:last-child'));
+
+        getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, function (friendUid, answer, $actionResultHolder, $historyHolder, contentClass, contentMessage) {
+            var response = answer.response,
+                message,
+                messageIdx,
+                newHistoryLine;
+
+            $historyHolder.val('');
+
+            for (messageIdx in response) {
+                message = response[messageIdx];
+
+                if (message.mid !== undefined) {
+                    newHistoryLine = (message.from_id == friendUid ? 'friend' : 'me') + ': ' + message.body + '\n';
+                    $historyHolder.val($historyHolder.val() + newHistoryLine);
+                }
+            }
+
+            updateActionResult($actionResultHolder, contentClass, contentMessage);
+        });
+
     });
 
     $('#newMessageModal').find('.btn-primary').on('click', function (e) {

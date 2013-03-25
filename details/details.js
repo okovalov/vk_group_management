@@ -25,14 +25,12 @@ function loadDateFromStorage(callback) {
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
 
         if (items.vk_gm_all_friends_data.friendsListGlobal === undefined) {
-
             return;
         }
 
         chrome.storage.local.get({'vk_access_token': {}}, function (items) {
 
             if (items.vk_access_token.length === undefined) {
-
                 requestAuthentication();
 
                 return;
@@ -43,6 +41,7 @@ function loadDateFromStorage(callback) {
         });
 
         friendsMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsMembersOfTheGroup.push(items.vk_gm_all_friends_data.friendsMembersOfTheGroup[0]);
 
         // TODO - remove it later. Temporaty use to show some data!
         // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
@@ -141,7 +140,6 @@ function onSendMessageButtonClick(e) {
         $actionResultHolder = $this.closest('tr').find('.friend-action-result'),
         $modal              = $('#newMessageModal');
 
-
     $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
     $modal.find('#friendUid').val(friendUid);
     $modal.data('actionResultHolder', $actionResultHolder);
@@ -158,7 +156,17 @@ function onPostOnWallButtonClick(e) {
 function onMessagesHistoryButtonClick(e) {
     "use strict";
 
-    alert('onMessagesHistoryButtonClick');
+    var $this               = $(e.currentTarget),
+        friendName          = $this.closest('tr').find('.friend_name').text(),
+        friendUid           = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $actionResultHolder = $this.closest('tr').find('.friend-action-result'),
+        $modal              = $('#historyMessagesModal');
+
+    $modal.find('#historyMessagesModalLabel').find('span').text("'" + friendName + "'");
+    $modal.find('#friendUid').val(friendUid);
+    $modal.data('actionResultHolder', $actionResultHolder);
+
+    $('#historyMessagesModal').modal();
 }
 
 function onInviteButtonClick(e) {
@@ -507,7 +515,7 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
         'access_token' : vkGlobalAccessToken,
         'uid'          : friendUid,
         'message'      : messageText,
-        'title'        : 'test message title'
+        'title'        : ''
     };
 
     vkApiInstance.get('messages.send', sendMessageHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder});
@@ -546,6 +554,43 @@ function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder,
     vkApiInstance.get('messages.getHistory', getHistoryHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder, 'historyHolder': $historyHolder, 'friendUid' : friendUid});
 }
 
+function getHistoryCallback(friendUid, answer, $actionResultHolder, $historyHolder, contentClass, contentMessage) {
+    "use strict";
+
+    var response = answer.response,
+        message,
+        messageIdx,
+        newHistoryLine;
+
+    $historyHolder.val('');
+
+    for (messageIdx in response) {
+        message = response[messageIdx];
+
+        if (message.mid !== undefined) {
+            newHistoryLine = (message.from_id == friendUid ? 'friend' : 'me') + ': ' + message.body + '\n';
+            $historyHolder.val($historyHolder.val() + newHistoryLine);
+        }
+    }
+
+    updateActionResult($actionResultHolder, contentClass, contentMessage);
+}
+
+function onMessageModalShown() {
+    var $parent = $(this),
+        $actionResultHolder = $parent.data('actionResultHolder'),
+        friendUid           = $parent.find('#friendUid').val(),
+        messageOffset       = 0,
+        messageCount        = 10,
+        $historyHolder     = $($parent.find('textarea:last-child'));
+
+    getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, getHistoryCallback);
+}
+
+function onLoadFriendsToContentList(e, friendsArray, tabId) {
+    loadFriendsToContentListHandler(friendsArray, tabId);
+}
+
 (function ($) {
     "use strict";
 
@@ -553,51 +598,19 @@ function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder,
         loadDateFromStorage(updateFriendsInforamtionLables);
     });
 
-    $('#friends_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
-        loadFriendsToContentListHandler(friendsArray, tabId);
-    });
+    $('#friends_members_of_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
 
-    $('#friends_invited_to_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
-        loadFriendsToContentListHandler(friendsArray, tabId);
-    });
+    $('#friends_invited_to_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
 
-    $('#friends_not_members_of_the_group').on('loadFriendsToContentList', function (e, friendsArray, tabId) {
-        loadFriendsToContentListHandler(friendsArray, tabId);
-    });
+    $('#friends_not_members_of_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
 
     $('#newMessageModal').find('button:first-child').on('click', function (e, messageArea) {
         $(messageArea).val('');
     });
 
-    $('#newMessageModal').on('shown', function () {
-        var $parent = $(this),
-            $actionResultHolder = $parent.data('actionResultHolder'),
-            friendUid           = $parent.find('#friendUid').val(),
-            messageOffset       = 0,
-            messageCount        = 10,
-            $historyHolder     = $($parent.find('textarea:last-child'));
+    $('#newMessageModal').on('shown', onMessageModalShown);
 
-        getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, function (friendUid, answer, $actionResultHolder, $historyHolder, contentClass, contentMessage) {
-            var response = answer.response,
-                message,
-                messageIdx,
-                newHistoryLine;
-
-            $historyHolder.val('');
-
-            for (messageIdx in response) {
-                message = response[messageIdx];
-
-                if (message.mid !== undefined) {
-                    newHistoryLine = (message.from_id == friendUid ? 'friend' : 'me') + ': ' + message.body + '\n';
-                    $historyHolder.val($historyHolder.val() + newHistoryLine);
-                }
-            }
-
-            updateActionResult($actionResultHolder, contentClass, contentMessage);
-        });
-
-    });
+    $('#historyMessagesModal').on('shown', onMessageModalShown);
 
     $('#newMessageModal').find('.btn-primary').on('click', function (e) {
         var $parent = $(this).parent().parent(),
@@ -611,11 +624,39 @@ function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder,
         sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
             updateActionResult($actionResultHolder, contentClass, contentMessage);
         });
-
     });
 
-    // $('.btn-new-message').on('click', function (e) {
-    //     $('#newMessageModal').modal();
-    // });
+    $('.btn-new-message-to-all').on('click', function (e) {
+        "use strict";
+
+        var $this               = $(e.currentTarget),
+            $parent             = $this.closest('.tab-pane'),
+            // $checkboxes         = $parent.find('.friend_checkbox input'),
+            $checkboxes         = $parent.find('input:checked'),
+            cbIdx,
+            $cb,
+            $tr                 ,
+            friendName          ,
+            friendUid           ,
+            $actionResultHolder ;
+
+        if ($checkboxes.length > 0) {
+            for (cbIdx = 0; cbIdx < $checkboxes.length; cbIdx += 1) {
+                if($checkboxes.hasOwnProperty(cbIdx)){
+
+                    $cb                 = $checkboxes[cbIdx];
+                    $tr                 = $($cb).closest('tr');
+                    friendName          = $tr.find('.friend_name').text();
+                    friendUid           = $tr.find('.friend_url').data('friend-uid');
+                    $actionResultHolder = $tr.find('.friend-action-result');
+                }
+            }
+
+        }
+        // $modal.find('#friendUid').val(friendUid);
+        // $modal.data('actionResultHolder', $actionResultHolder);
+
+        // $('#newMessageModal').modal();
+    });
 
 })(jQuery);

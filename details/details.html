@@ -35,6 +35,14 @@
                                 <div class="navbar-inner">
                                     <span class="brand section-title" href="#">Friends who are members already</span>
                                 </div>
+                                <div class="btn-toolbar">
+                                    <div class="btn-group">
+                                        <a class="btn btn-new-message-to-all" href="#" data-toggle="tooltip" title="Send a message to selected friends">
+                                            <i class="icon-envelope"></i>
+                                        </a>
+                                        <a class="btn" href="#" data-toggle="tooltip" title="Post on the wall"><i class="icon-share"></i></a>
+                                    </div>
+                                </div>
                             </div>
                             <div class="friend-info" style="display: none"></div>
                             <div class="progress progress-success progress-striped">
@@ -78,6 +86,22 @@
           <div class="modal-body">
             <p>Enter your message here:</p>
             <textarea rows="3" cols="25" class="message"></textarea>
+            <p>Messages history:</p>
+            <textarea rows="3" cols="25" readonly="readonly"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+            <button class="btn btn-primary">Send</button>
+          </div>
+        </div>
+
+        <div id="historyMessagesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="historyMessagesModalLabel" aria-hidden="true">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="historyMessagesModalLabel">Messages history of <span></span></h3>
+            <input type="hidden" id="friendUid" value="0" />
+          </div>
+          <div class="modal-body">
             <p>Messages history:</p>
             <textarea rows="3" cols="25" readonly="readonly"></textarea>
           </div>

@@ -1,4 +1,4 @@
-/*global document, chrome, alert, XMLHttpRequest, handleError, appendToBody */
+/*global clearBodyContent, document, chrome, alert, XMLHttpRequest,setTimeout, extend, handleError, appendToBody, reloadFriendsList, getGroupMembersList, this */
 
 /**
  * @author    Oleksandr Kovalov <oleksandrk@nationalfibre.net>
@@ -7,10 +7,138 @@
  * @link      https://github.com/...
  */
 
+var friendsMembersOfTheGroup,
+    friendsNotMembersOfTheGroup,
+    friendsInvitedToTheGroup,
+    friendsListGlobal,
+    membersListGlobal;
+
 function updateRequestedFriendNumber(idx) {
     "use strict";
 
     document.getElementById('current_friend_number').innerHTML = idx + 1;
+}
+
+function showDoneWrapHideLoadingWrap() {
+    "use strict";
+
+    document.getElementById('wrap-done').style.display = '';
+    document.getElementById('wrap-done').style.hidden = '';
+
+    document.getElementById('wrap').style.display = 'none';
+    document.getElementById('wrap').style.hidden = 'hidden';
+}
+
+function hideDoneWrapShowLoadingWrap() {
+    "use strict";
+
+    document.getElementById('wrap-done').style.display = 'none';
+    document.getElementById('wrap-done').style.hidden = 'hidden';
+
+    document.getElementById('wrap').style.display = '';
+    document.getElementById('wrap').style.hidden = '';
+}
+
+function updateFriendsDataLables() {
+    "use strict";
+
+    appendToBody('p', 'innerHTML', 'Friends count: ' + friendsListGlobal.length);
+    appendToBody('p', 'innerHTML', 'Group members count: ' + membersListGlobal.count);
+
+    appendToBody('p', 'innerHTML', '<br/>Friends - members of the group count: ' + friendsMembersOfTheGroup.length);
+    appendToBody('p', 'innerHTML', 'Friends - invited to the group count: ' + friendsInvitedToTheGroup.length);
+    appendToBody('p', 'innerHTML', 'Friends - not members of the group count: ' + friendsNotMembersOfTheGroup.length);
+
+    showDoneWrapHideLoadingWrap();
+}
+
+function saveFriendsDataToSotrage(callback) {
+    "use strict";
+
+    var vk_gm_all_friends_data = {
+        'membersListGlobal':           membersListGlobal,
+        'friendsListGlobal':           friendsListGlobal,
+        'friendsMembersOfTheGroup':    friendsMembersOfTheGroup,
+        'friendsNotMembersOfTheGroup': friendsNotMembersOfTheGroup,
+        'friendsInvitedToTheGroup':    friendsInvitedToTheGroup
+    };
+
+    chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
+        callback();
+    });
+}
+
+function getNextFriendInfo(idx, gid, callbackToCheckFriends) {
+    "use strict";
+
+    if (friendsListGlobal[idx + 1] === undefined) {
+
+        saveFriendsDataToSotrage(function () {
+            updateFriendsDataLables();
+        });
+
+        return;
+    }
+
+    setTimeout(function () {
+        callbackToCheckFriends(idx + 1, gid);
+    }, 150);
+}
+
+function checkFriendIsInGroupCallback(additionalParameters, e) {
+    "use strict";
+
+    var answer = JSON.parse(e.target.response),
+        friendInfo,
+        friend,
+        idx = additionalParameters.idx,
+        gid = additionalParameters.gid,
+        callbackToCheckFriends = additionalParameters.callbackToCheckFriends,
+        tmpFriend;
+
+    if (answer.error !== undefined) {
+        handleError(answer.error);
+
+        return;
+    }
+
+    friendInfo = answer.response;
+    friend     = friendsListGlobal[idx];
+    tmpFriend  = {'uid': friend.uid, 'first_name': friend.first_name, 'last_name': friend.last_name};
+
+    if (friendInfo.member === 1) {
+        friendsMembersOfTheGroup.push(extend(tmpFriend));
+
+        return getNextFriendInfo(idx, gid, callbackToCheckFriends);
+    }
+
+    if (friendInfo.invitation !== undefined) {
+        friendsInvitedToTheGroup.push(extend(tmpFriend));
+    }
+
+    friendsNotMembersOfTheGroup.push(extend(tmpFriend));
+
+    return getNextFriendInfo(idx, gid, callbackToCheckFriends);
+}
+
+function checkFriendIsInGroup(idx, gid) {
+    "use strict";
+
+    var parameters = {
+            'access_token' : vkGlobalAccessToken,
+            'gid'          : gid,
+            'uid'          : friendsListGlobal[idx].uid,
+            'extended'     : 1
+        },
+        additionalParameters = {
+            'idx'                    : idx,
+            'gid'                    : gid,
+            'callbackToCheckFriends' : checkFriendIsInGroup
+        };
+
+    updateRequestedFriendNumber(idx);
+
+    vkApiInstance.get('groups.isMember', checkFriendIsInGroupCallback, this, parameters, additionalParameters);
 }
 
 function getFriendsListCallback(additionalParameters, e) {
@@ -70,121 +198,6 @@ function getGroupMembersList() {
         };
 
     vkApiInstance.get('groups.getMembers', getGroupMembersListCallback, this, parameters);
-}
-
-function checkFriendIsInGroupCallback(additionalParameters, e) {
-    "use strict";
-
-    var answer = JSON.parse(e.target.response),
-        friendInfo,
-        friend,
-        idx = additionalParameters.idx,
-        gid = additionalParameters.gid,
-        tmpFriend;
-
-    if (answer.error !== undefined) {
-        handleError(answer.error);
-
-        return;
-    }
-
-    friendInfo = answer.response;
-    friend     = friendsListGlobal[idx];
-    tmpFriend  = {'uid': friend.uid, 'first_name': friend.first_name, 'last_name': friend.last_name};
-
-    if (friendInfo.member === 1) {
-        friendsMembersOfTheGroup.push(extend(tmpFriend));
-
-        return getNextFriendInfo(idx, gid);
-    }
-
-    if (friendInfo.invitation !== undefined) {
-        friendsInvitedToTheGroup.push(extend(tmpFriend));
-    }
-
-    friendsNotMembersOfTheGroup.push(extend(tmpFriend));
-
-    return getNextFriendInfo(idx, gid);
-}
-
-function checkFriendIsInGroup(idx, gid) {
-    "use strict";
-
-    var parameters = {
-            'access_token' : vkGlobalAccessToken,
-            'gid'          : gid,
-            'uid'          : friendsListGlobal[idx].uid,
-            'extended'     : 1
-        },
-        additionalParameters = {
-            'idx' : idx,
-            'gid' : gid
-        };
-
-    updateRequestedFriendNumber(idx);
-
-    vkApiInstance.get('groups.isMember', checkFriendIsInGroupCallback, this, parameters, additionalParameters);
-}
-
-function getNextFriendInfo(idx, gid) {
-    "use strict";
-
-    if (friendsListGlobal[idx + 1] === undefined) {
-
-        saveFriendsDataToSotrage(function () {
-            updateFriendsDataLables();
-        });
-
-        return;
-    }
-
-    setTimeout(function () {
-        checkFriendIsInGroup(idx + 1, gid);
-    }, 150);
-}
-
-function saveFriendsDataToSotrage(callback) {
-    "use strict";
-
-    var vk_gm_all_friends_data = {
-        'membersListGlobal':           membersListGlobal,
-        'friendsListGlobal':           friendsListGlobal,
-        'friendsMembersOfTheGroup':    friendsMembersOfTheGroup,
-        'friendsNotMembersOfTheGroup': friendsNotMembersOfTheGroup,
-        'friendsInvitedToTheGroup':    friendsInvitedToTheGroup
-    };
-
-    chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
-        callback();
-    });
-}
-
-function updateFriendsDataLables() {
-    appendToBody('p', 'innerHTML', 'Friends count: ' + friendsListGlobal.length);
-    appendToBody('p', 'innerHTML', 'Group members count: ' + membersListGlobal.count);
-
-    appendToBody('p', 'innerHTML', '<br/>Friends - members of the group count: ' + friendsMembersOfTheGroup.length);
-    appendToBody('p', 'innerHTML', 'Friends - invited to the group count: ' + friendsInvitedToTheGroup.length);
-    appendToBody('p', 'innerHTML', 'Friends - not members of the group count: ' + friendsNotMembersOfTheGroup.length);
-
-    showDoneWrapHideLoadingWrap();
-}
-
-function showDoneWrapHideLoadingWrap() {
-    document.getElementById('wrap-done').style.display = '';
-    document.getElementById('wrap-done').style.hidden = '';
-
-    document.getElementById('wrap').style.display = 'none';
-    document.getElementById('wrap').style.hidden = 'hidden';
-}
-
-function hideDoneWrapShowLoadingWrap() {
-
-    document.getElementById('wrap-done').style.display = 'none';
-    document.getElementById('wrap-done').style.hidden = 'hidden';
-
-    document.getElementById('wrap').style.display = '';
-    document.getElementById('wrap').style.hidden = '';
 }
 
 function onReloadFriendsListLinkClick() {

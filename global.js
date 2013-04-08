@@ -24,4 +24,4 @@ var vkGlobalAccessToken,
     friendsInvitedToTheGroup    = [],
     // vkGroupId                   = 49912690;
     // vkGroupId                   = 6462607;
-    vkGroupId                      = 51174068;
+    vkGroupId                      = '51174068';

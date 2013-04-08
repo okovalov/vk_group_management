@@ -1,122 +1,128 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>VK Group Management Popup - Friends details page</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Bootstrap -->
-        <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-        <link href="css/bootstrap-responsive.css" rel="stylesheet">
-        <link href="details.css" rel="stylesheet">
-    </head>
-    <body>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="span3 bs-docs-sidebar">
-                    <div class="tabbable">
-                        <ul class="nav nav-tabs nav-stacked bs-docs-sidenav">
-                            <li class="nav-header">Friends Info:</li>
+<head>
+    <title>VK Group Management Popup - Friends details page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="details.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="span3 bs-docs-sidebar">
+                <div class="tabbable">
+                    <ul class="nav nav-tabs nav-stacked bs-docs-sidenav">
+                        <li class="nav-header">Friends Info:</li>
 
-                            <li class="active">
-                              <a href="#tab1" data-toggle="pill">Members (<span id="friends_members_of_the_group">0</span>)</a>
-                            </li>
-                            <li>
-                                <a href="#tab2" data-toggle="pill">Invited (<span id="friends_invited_to_the_group">0</span>)</a>
-                            </li>
-                            <li>
-                                <a href="#tab3" data-toggle="pill">Not members (<span id="friends_not_members_of_the_group">0</span>)</a>
-                            </li>
-                        </ul>
-                    </div>
+                        <li class="active">
+                            <a href="#tab1" data-toggle="pill">Members (<span id="friends_members_of_the_group">0</span>)</a>
+                        </li>
+                        <li>
+                            <a href="#tab2" data-toggle="pill">Invited (<span id="friends_invited_to_the_group">0</span>)</a>
+                        </li>
+                        <li>
+                            <a href="#tab3" data-toggle="pill">Not members (<span id="friends_not_members_of_the_group">0</span>)</a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="span9">
-                    <div class="tab-content">
-                        <div class="tab-pane active rounded" id="tab1">
-                            <div class="navbar">
-                                <div class="navbar-inner">
-                                    <span class="brand section-title" href="#">Friends who are members already</span>
-                                </div>
-                                <div class="btn-toolbar">
-                                    <div class="btn-group">
-                                        <a class="btn btn-new-message-to-all" href="#" data-toggle="tooltip" title="Send a message to selected friends">
-                                            <i class="icon-envelope"></i>
-                                        </a>
-                                        <a class="btn" href="#" data-toggle="tooltip" title="Post on the wall"><i class="icon-share"></i></a>
-                                    </div>
-                                </div>
+            </div>
+            <div class="span9">
+                <div class="tab-content">
+                    <div class="tab-pane active rounded" id="tab1">
+                        <div class="navbar">
+                            <div class="navbar-inner">
+                                <span class="brand section-title" href="#">Friends who are members already</span>
                             </div>
-                            <div class="friend-info" style="display: none"></div>
-                            <div class="progress progress-success progress-striped">
-                                <div class="bar" style="width: 0%"></div>
+                            <div class="btn-toolbar">
+                                <div class="btn-group">
+                                    <a class="btn btn-new-message-to-all" href="#" data-toggle="tooltip" title="Send a message to selected friends">
+                                        <i class="icon-envelope"></i>
+                                    </a>
+                                    <a class="btn" href="#" data-toggle="tooltip" title="Post on the wall"><i class="icon-share"></i></a>
+                                </div>
                             </div>
                         </div>
-                        <div class="tab-pane rounded" id="tab2">
-                            <div class="navbar">
-                                <div class="navbar-inner">
-                                    <span class="brand section-title" href="#">Friends who are invited</span>
-                                </div>
-                            </div>
-                            <div class="friend-info" style="display: none"></div>
-                            <div class="progress progress-success progress-striped">
-                                <div class="bar" style="width: 0%"></div>
+                        <div class="friend-info" style="display: none"></div>
+                        <div class="progress progress-success progress-striped">
+                            <div class="bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane rounded" id="tab2">
+                        <div class="navbar">
+                            <div class="navbar-inner">
+                                <span class="brand section-title" href="#">Friends who are invited</span>
                             </div>
                         </div>
-                        <div class="tab-pane rounded" id="tab3">
-                            <div class="navbar">
-                                <div class="navbar-inner">
-                                    <span class="brand section-title" href="#">Friends who are not members and not invited yet</span>
-                                </div>
+                        <div class="friend-info" style="display: none"></div>
+                        <div class="progress progress-success progress-striped">
+                            <div class="bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane rounded" id="tab3">
+                        <div class="navbar">
+                            <div class="navbar-inner">
+                                <span class="brand section-title" href="#">Friends who are not members and not invited yet</span>
                             </div>
-                            <div class="friend-info" style="display: none"></div>
-                            <div class="progress progress-success progress-striped">
-                                <div class="bar" style="width: 0%"></div>
-                            </div>
+                        </div>
+                        <div class="friend-info" style="display: none"></div>
+                        <div class="progress progress-success progress-striped">
+                            <div class="bar" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- container -->
+    </div>
+    <!-- container -->
 
-        <div id="newMessageModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="newMessageModalLabel" aria-hidden="true">
-          <div class="modal-header">
+    <div id="newMessageModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="newMessageModalLabel" aria-hidden="true">
+        <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
             <h3 id="newMessageModalLabel">New message to <span></span></h3>
             <input type="hidden" id="friendUid" value="0" />
-          </div>
-          <div class="modal-body">
-            <p>Enter your message here:</p>
-            <textarea rows="3" cols="25" class="message"></textarea>
-            <p>Messages history:</p>
-            <textarea rows="3" cols="25" readonly="readonly"></textarea>
-          </div>
-          <div class="modal-footer">
+        </div>
+        <div class="modal-body">
+            <div class="message-body">
+                <p>Enter your message here:</p>
+                <textarea rows="3" cols="25" class="message"></textarea>
+            </div>
+            <div class="history-body">
+                <p>Messages history:</p>
+                <textarea rows="3" cols="25" readonly="readonly"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
             <button class="btn btn-primary">Send</button>
-          </div>
         </div>
+    </div>
 
-        <div id="historyMessagesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="historyMessagesModalLabel" aria-hidden="true">
-          <div class="modal-header">
+    <div id="historyMessagesModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="historyMessagesModalLabel" aria-hidden="true">
+        <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
             <h3 id="historyMessagesModalLabel">Messages history of <span></span></h3>
             <input type="hidden" id="friendUid" value="0" />
-          </div>
-          <div class="modal-body">
-            <p>Messages history:</p>
-            <textarea rows="3" cols="25" readonly="readonly"></textarea>
-          </div>
-          <div class="modal-footer">
+        </div>
+        <div class="modal-body">
+            <div class="history-body">
+                <p>Messages history:</p>
+                <textarea rows="3" cols="25" readonly="readonly"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
             <button class="btn btn-primary">Send</button>
-          </div>
         </div>
+    </div>
 
-        <script src="js/jquery.js"></script>
-        <script src="js/bootstrap.min.js"></script>
-        <script src="/authentication.js"></script>
-        <script src="/global.js"></script>
-        <script src="/functions.js"></script>
-        <script src="details.js"></script>
-    </body>
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="/authentication.js"></script>
+    <script src="/global.js"></script>
+    <script src="/functions.js"></script>
+    <script src="details.js"></script>
+</body>
 </html>
 

@@ -28,6 +28,7 @@ function loadDateFromStorage(callback) {
             return;
         }
 
+        // chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) { console.log(items); });
         chrome.storage.local.get({'vk_access_token': {}}, function (items) {
 
             if (items.vk_access_token.length === undefined) {
@@ -41,14 +42,14 @@ function loadDateFromStorage(callback) {
         });
 
         friendsMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
-        friendsMembersOfTheGroup.push(items.vk_gm_all_friends_data.friendsMembersOfTheGroup[0]);
+        // friendsMembersOfTheGroup.push(items.vk_gm_all_friends_data.friendsMembersOfTheGroup[0]);
 
         // TODO - remove it later. Temporaty use to show some data!
-        // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
-        friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
+        // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
 
-        // friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
-        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
+        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
+        // friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
 
         friendsListGlobal           = items.vk_gm_all_friends_data.friendsListGlobal;
 
@@ -83,6 +84,10 @@ function loadFriendsToContentListHandler(friendsArray, tabId) {
 
     for (friendIndex in friendsArray) {
         friend          = friendsArray[friendIndex];
+
+        if (friend === null) {
+            continue;
+        }
         currentProgress = (friendsArray.length * friendIndex  / 100);
         $tableRow       = createFriendListTableRow(tabId, friend);
 
@@ -127,7 +132,7 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
         'text'  : 'Click for details'
     };
 
-    $actionResultHolder.empty()
+   // $actionResultHolder.empty()
     $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
 }
 
@@ -582,9 +587,11 @@ function onMessageModalShown() {
         friendUid           = $parent.find('#friendUid').val(),
         messageOffset       = 0,
         messageCount        = 10,
-        $historyHolder     = $($parent.find('textarea:last-child'));
+        $historyHolder     = $($parent.find('.history-body textarea'));
 
-    getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, getHistoryCallback);
+    if (friendUid !== '') {
+        getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, getHistoryCallback);
+    }
 }
 
 function onLoadFriendsToContentList(e, friendsArray, tabId) {
@@ -615,15 +622,38 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
     $('#newMessageModal').find('.btn-primary').on('click', function (e) {
         var $parent = $(this).parent().parent(),
             $actionResultHolder = $parent.data('actionResultHolder'),
+            $currentActionResultHolder,
             friendUid           = $parent.find('#friendUid').val(),
             $message            = $parent.find('.message'),
-            messageText         = $message.val();
+            messageText         = $message.val(),
+            friendUidHolder,
+            i;
 
         $parent.find('button:first-child').trigger('click', $message);
 
-        sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
-            updateActionResult($actionResultHolder, contentClass, contentMessage);
-        });
+        if (friendUid !== '') {
+
+            sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
+                updateActionResult($actionResultHolder, contentClass, contentMessage);
+            });
+
+            return;
+        }
+
+        friendUidHolder = $parent.data('friendUidHolder');
+
+        for (i = 0; i < friendUidHolder.length; i += 1) {
+
+            setTimeout(function () {
+                $currentActionResultHolder = $actionResultHolder[i];
+                friendUid = friendUidHolder[i];
+
+                sendMessage(friendUid, messageText, $currentActionResultHolder, function ($currentActionResultHolder, contentClass, contentMessage) {
+                    updateActionResult($currentActionResultHolder, contentClass, contentMessage);
+                });
+            }, 150);
+        }
+
     });
 
     $('.btn-new-message-to-all').on('click', function (e) {
@@ -631,32 +661,44 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
 
         var $this               = $(e.currentTarget),
             $parent             = $this.closest('.tab-pane'),
-            // $checkboxes         = $parent.find('.friend_checkbox input'),
-            $checkboxes         = $parent.find('input:checked'),
+            $checkboxes         = $parent.find('.friend_checkbox input:checked'),
             cbIdx,
             $cb,
-            $tr                 ,
-            friendName          ,
-            friendUid           ,
-            $actionResultHolder ;
+            $tr,
+            friendName,
+            friendUid,
+            $actionResultHolder,
+            $modal              = $('#newMessageModal'),
+            friendUidArray      = [],
+            actionResultHolderArray = [];
+
+        friendName = $checkboxes.length + ' friends';
+
+        $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
+        $modal.find('#friendUid').val('');
+        $modal.data('checkboxestHolder', $checkboxes);
+
+        $('#newMessageModal').modal();
 
         if ($checkboxes.length > 0) {
             for (cbIdx = 0; cbIdx < $checkboxes.length; cbIdx += 1) {
-                if($checkboxes.hasOwnProperty(cbIdx)){
-
+                if ($checkboxes.hasOwnProperty(cbIdx)) {
                     $cb                 = $checkboxes[cbIdx];
                     $tr                 = $($cb).closest('tr');
                     friendName          = $tr.find('.friend_name').text();
                     friendUid           = $tr.find('.friend_url').data('friend-uid');
                     $actionResultHolder = $tr.find('.friend-action-result');
+                    friendUidArray.push(friendUid);
+                    actionResultHolderArray.push($actionResultHolder);
+
                 }
             }
 
-        }
-        // $modal.find('#friendUid').val(friendUid);
-        // $modal.data('actionResultHolder', $actionResultHolder);
+            $modal.data('actionResultHolder', actionResultHolderArray);
+            $modal.data('friendUidHolder', friendUidArray);
 
-        // $('#newMessageModal').modal();
+        }
+
     });
 
 })(jQuery);

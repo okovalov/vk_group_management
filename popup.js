@@ -93,16 +93,16 @@ function checkFriendIsInGroupCallback(additionalParameters, e) {
     tmpFriend  = {'uid': friend.uid, 'first_name': friend.first_name, 'last_name': friend.last_name};
 
     if (friendInfo.member === 1) {
-        friendsMembersOfTheGroup.push(tmpFriend);
+        friendsMembersOfTheGroup.push(extend(tmpFriend));
 
         return getNextFriendInfo(idx, gid);
     }
 
-    if (friendInfo.invited !== undefined) {
-        friendsInvitedToTheGroup.push(friendsListGlobal[idx]);
+    if (friendInfo.invitation !== undefined) {
+        friendsInvitedToTheGroup.push(extend(tmpFriend));
     }
 
-    friendsNotMembersOfTheGroup.push(tmpFriend);
+    friendsNotMembersOfTheGroup.push(extend(tmpFriend));
 
     return getNextFriendInfo(idx, gid);
 }

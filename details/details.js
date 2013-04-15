@@ -1,4 +1,4 @@
-/*global document, chrome, $, jQuery  */
+/*global document, chrome, $, jQuery, setTimeout  */
 var $sendMessageButtonHolderGlobal,
     $postOnWallButtonHolderGlobal,
     $messagesHistoryButtonHolderGlobal,
@@ -118,7 +118,10 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
 
     var temporaryElementOptions,
         elementOptions,
-        $actionResult;
+        $actionResult,
+        $log,
+        $logBody
+        ;
 
     temporaryElementOptions = {
         'title'     : 'Details of the last action',
@@ -133,6 +136,12 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
 
     $actionResultHolder.empty();
     $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
+
+    $log     = $('.log-window');
+    $logBody = $log.find('.log-body').find('textarea');
+
+    $logBody.text($logBody.text() + '\n' +  contentMessage);
+
 }
 
 function onSendMessageButtonClick(e) {
@@ -518,7 +527,7 @@ function sendMessageHandler(additionalParameters, e) {
 
             obj = messageObjectStack.pop();
 
-            if (obj == undefined) {
+            if (obj === undefined) {
                 return;
             }
 
@@ -527,7 +536,7 @@ function sendMessageHandler(additionalParameters, e) {
                     updateActionResult($currentActionResultHolder, contentClass, contentMessage);
                 },
                 messageObjectStack
-            );
+                );
 
         }, 150);
     }
@@ -717,7 +726,6 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
                     $actionResultHolder = $tr.find('.friend-action-result');
                     friendUidArray.push(friendUid);
                     actionResultHolderArray.push($actionResultHolder);
-
                 }
             }
 

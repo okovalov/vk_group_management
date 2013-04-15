@@ -5,7 +5,6 @@ var $sendMessageButtonHolderGlobal,
     $inviteButtonHolderGlobal,
     $invitationsHistoryButtonHolderGlobal;
 
-
 function updateFriendsInforamtionLables() {
     "use strict";
 
@@ -132,7 +131,7 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
         'text'  : 'Click for details'
     };
 
-   // $actionResultHolder.empty()
+    $actionResultHolder.empty();
     $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
 }
 
@@ -503,7 +502,9 @@ function sendMessageHandler(additionalParameters, e) {
         actionResultHolder = additionalParameters.actionResultHolder,
         contentMessage     = 'message has been sent successfully',
         contentClass       = 'text-success',
-        actionTime         = new Date();
+        actionTime         = new Date(),
+        messageObjectStack = additionalParameters.messageObjectStack,
+        obj;
 
     if (answer.error !== undefined) {
         contentMessage = answer.error.error_msg;
@@ -511,9 +512,28 @@ function sendMessageHandler(additionalParameters, e) {
     }
 
     callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
+
+    if (messageObjectStack !== undefined) {
+        setTimeout(function () {
+
+            obj = messageObjectStack.pop();
+
+            if (obj == undefined) {
+                return;
+            }
+
+            sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
+                function ($currentActionResultHolder, contentClass, contentMessage) {
+                    updateActionResult($currentActionResultHolder, contentClass, contentMessage);
+                },
+                messageObjectStack
+            );
+
+        }, 150);
+    }
 }
 
-function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
+function sendMessage(friendUid, messageText, $actionResultHolder, callback, messageObjectStack) {
     "use strict";
 
     var parameters = {
@@ -523,7 +543,7 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback) {
         'title'        : ''
     };
 
-    vkApiInstance.get('messages.send', sendMessageHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder});
+    vkApiInstance.get('messages.send', sendMessageHandler, this, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder, 'messageObjectStack': messageObjectStack});
 }
 
 function getHistoryHandler(additionalParameters, e) {
@@ -582,12 +602,14 @@ function getHistoryCallback(friendUid, answer, $actionResultHolder, $historyHold
 }
 
 function onMessageModalShown() {
+    "use strict";
+
     var $parent = $(this),
         $actionResultHolder = $parent.data('actionResultHolder'),
         friendUid           = $parent.find('#friendUid').val(),
         messageOffset       = 0,
         messageCount        = 10,
-        $historyHolder     = $($parent.find('.history-body textarea'));
+        $historyHolder      = $($parent.find('.history-body textarea'));
 
     if (friendUid !== '') {
         getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, getHistoryCallback);
@@ -595,6 +617,8 @@ function onMessageModalShown() {
 }
 
 function onLoadFriendsToContentList(e, friendsArray, tabId) {
+    "use strict";
+
     loadFriendsToContentListHandler(friendsArray, tabId);
 }
 
@@ -627,7 +651,9 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
             $message            = $parent.find('.message'),
             messageText         = $message.val(),
             friendUidHolder,
-            i;
+            i,
+            obj,
+            messageObjectStack = [];
 
         $parent.find('button:first-child').trigger('click', $message);
 
@@ -643,16 +669,17 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
         friendUidHolder = $parent.data('friendUidHolder');
 
         for (i = 0; i < friendUidHolder.length; i += 1) {
-
-            setTimeout(function () {
-                $currentActionResultHolder = $actionResultHolder[i];
-                friendUid = friendUidHolder[i];
-
-                sendMessage(friendUid, messageText, $currentActionResultHolder, function ($currentActionResultHolder, contentClass, contentMessage) {
-                    updateActionResult($currentActionResultHolder, contentClass, contentMessage);
-                });
-            }, 150);
+            messageObjectStack.push({'friendUid': friendUidHolder[i], 'actionResultHolder' : $actionResultHolder[i], 'messageText' : messageText});
         }
+
+        obj = messageObjectStack.pop();
+
+        sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
+            function ($currentActionResultHolder, contentClass, contentMessage) {
+                updateActionResult($currentActionResultHolder, contentClass, contentMessage);
+            },
+            messageObjectStack
+        );
 
     });
 

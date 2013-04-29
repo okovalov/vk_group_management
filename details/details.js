@@ -221,7 +221,6 @@ function onInviteButtonClick(e) {
         };
 
         chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
-            // callback();
         });
 
         updateActionResult($actionResultHolder, contentClass, contentMessage);

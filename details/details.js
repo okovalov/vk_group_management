@@ -40,17 +40,13 @@ function loadDateFromStorage(callback) {
 
         });
 
+        membersListGlobal           = items.vk_gm_all_friends_data.membersListGlobal;
+        friendsListGlobal           = items.vk_gm_all_friends_data.friendsListGlobal;
         friendsMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
-        // friendsMembersOfTheGroup.push(items.vk_gm_all_friends_data.friendsMembersOfTheGroup[0]);
+        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
 
         // TODO - remove it later. Temporaty use to show some data!
         friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsInvitedToTheGroup;
-        // friendsInvitedToTheGroup    = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
-
-        friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsNotMembersOfTheGroup;
-        // friendsNotMembersOfTheGroup = items.vk_gm_all_friends_data.friendsMembersOfTheGroup;
-
-        friendsListGlobal           = items.vk_gm_all_friends_data.friendsListGlobal;
 
         callback();
     });
@@ -78,15 +74,15 @@ function loadFriendsToContentListHandler(friendsArray, tabId) {
 
     elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
     $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
-
-    $tableHeader    = createFriendsTableHead().appendTo($friendsTable);
+    $tableHeader   = createFriendsTableHead().appendTo($friendsTable);
 
     for (friendIndex in friendsArray) {
-        friend          = friendsArray[friendIndex];
+        friend = friendsArray[friendIndex];
 
         if (friend === null) {
             continue;
         }
+
         currentProgress = (friendsArray.length * friendIndex  / 100);
         $tableRow       = createFriendListTableRow(tabId, friend);
 
@@ -141,7 +137,6 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
     $logBody = $log.find('.log-body').find('textarea');
 
     $logBody.text($logBody.text() + '\n' +  contentMessage);
-
 }
 
 function onSendMessageButtonClick(e) {
@@ -185,7 +180,78 @@ function onMessagesHistoryButtonClick(e) {
 function onInviteButtonClick(e) {
     "use strict";
 
-    alert('onInviteButtonClick');
+    var $this               = $(e.currentTarget),
+        $tableRow           = $this.closest('tr'),
+        friendName          = $tableRow.find('.friend_name').text(),
+        friendUid           = $tableRow.find('.friend_url').data('friend-uid'),
+        $actionResultHolder = $tableRow.find('.friend-action-result'),
+        callback,
+        parameters,
+        additionalParameters
+        ;
+
+    callback = function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
+        var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow;
+
+        friendsInvitedToTheGroup.push(friendsNotMembersOfTheGroup[friendUid]);
+
+        friendsNotMembersOfTheGroup[friendUid] = undefined;
+        friendsNotMembersOfTheGroup.length -= 1;
+
+        $tab              = $('#tab2');
+        $friendInfoHolder = $tab.children('div.friend-info');
+
+        $friendsTable  = $friendInfoHolder.children('table');
+        $friendsTable.append($tableRow.clone(true));
+
+        $('#friends_invited_to_the_group').text(friendsInvitedToTheGroup.length);
+
+        $('#friends_not_members_of_the_group').text(friendsNotMembersOfTheGroup.length);
+
+        $oldTable = $tableRow.parent();
+        $oldRow = $oldTable.find('td.friend_url[data-friend-uid="'+ friendUid +'"]').parent();
+        $oldRow.empty();
+
+        vk_gm_all_friends_data = {
+            'membersListGlobal':           membersListGlobal,
+            'friendsListGlobal':           friendsListGlobal,
+            'friendsMembersOfTheGroup':    friendsMembersOfTheGroup,
+            'friendsNotMembersOfTheGroup': friendsNotMembersOfTheGroup,
+            'friendsInvitedToTheGroup':    friendsInvitedToTheGroup
+        };
+
+        chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
+            // callback();
+        });
+
+        updateActionResult($actionResultHolder, contentClass, contentMessage);
+    };
+
+
+    if (friendsNotMembersOfTheGroup[friendUid].hash === undefined) {
+        updateActionResult($actionResultHolder, 'text-error', 'Impossible to invite this friend');
+        return;
+    }
+
+    additionalParameters = {
+        'callback' : callback,
+        'actionResultHolder': $actionResultHolder,
+        'tableRow' : $tableRow,
+        'postRequest' : true,
+        'friendUid' : friendUid,
+        'postUrl' : 'http://vk.com/al_page.php',
+        'postParameters' : {
+            'field' : [
+                {'fieldName': 'act', 'fieldValue' : 'a_invite'},
+                {'fieldName': 'al', 'fieldValue' : '1'},
+                {'fieldName': 'gid', 'fieldValue' : vkGroupId},
+                {'fieldName': 'mid', 'fieldValue' : friendUid},
+                {'fieldName': 'hash', 'fieldValue' : friendsNotMembersOfTheGroup[friendUid].hash}
+            ]
+        }
+    }
+
+    vkApiInstance.get('', inviteMemberHandler, this, parameters, additionalParameters, 'POST');
 }
 
 function onInvitationsHistoryButtonClick(e) {
@@ -542,6 +608,50 @@ function sendMessageHandler(additionalParameters, e) {
     }
 }
 
+function inviteMemberHandler(additionalParameters, e) {
+    "use strict";
+
+    var answer             = e.target.response,
+        friendUid          = additionalParameters.friendUid,
+        callback           = additionalParameters.callback,
+        actionResultHolder = additionalParameters.actionResultHolder,
+        $tableRow          = additionalParameters.tableRow,
+        contentMessage     = 'invitation has been sent successfully',
+        contentClass       = 'text-success',
+        actionTime         = new Date(),
+        messageObjectStack = additionalParameters.messageObjectStack,
+        obj,
+        i, friends, friendListLength, friendsGlobal = {}, friend;
+
+    answer.replace(/<\/?[^>]+(>|$)/g, "");
+
+    if (answer.toLowerCase().indexOf('success') === -1) {
+        contentMessage = answer;
+        contentClass   = 'text-error';
+    }
+
+    callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString(), $tableRow, friendUid);
+
+    // if (messageObjectStack !== undefined) {
+    //     setTimeout(function () {
+
+    //         obj = messageObjectStack.pop();
+
+    //         if (obj === undefined) {
+    //             return;
+    //         }
+
+    //         sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
+    //             function ($currentActionResultHolder, contentClass, contentMessage) {
+    //                 updateActionResult($currentActionResultHolder, contentClass, contentMessage);
+    //             },
+    //             messageObjectStack
+    //             );
+
+    //     }, 150);
+    // }
+}
+
 function sendMessage(friendUid, messageText, $actionResultHolder, callback, messageObjectStack) {
     "use strict";
 
@@ -639,9 +749,7 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
     });
 
     $('#friends_members_of_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
-
     $('#friends_invited_to_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
-
     $('#friends_not_members_of_the_group').on('loadFriendsToContentList', onLoadFriendsToContentList);
 
     $('#newMessageModal').find('button:first-child').on('click', function (e, messageArea) {
@@ -649,7 +757,6 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
     });
 
     $('#newMessageModal').on('shown', onMessageModalShown);
-
     $('#historyMessagesModal').on('shown', onMessageModalShown);
 
     $('#newMessageModal').find('.btn-primary').on('click', function (e) {
@@ -667,7 +774,6 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
         $parent.find('button:first-child').trigger('click', $message);
 
         if (friendUid !== '') {
-
             sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
                 updateActionResult($actionResultHolder, contentClass, contentMessage);
             });

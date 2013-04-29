@@ -11,7 +11,8 @@ var friendsMembersOfTheGroup,
     friendsNotMembersOfTheGroup,
     friendsInvitedToTheGroup,
     friendsListGlobal,
-    membersListGlobal;
+    membersListGlobal,
+    friendsWithHash = {};
 
 function updateRequestedFriendNumber(idx) {
     "use strict";
@@ -116,7 +117,12 @@ function checkFriendIsInGroupCallback(additionalParameters, e) {
         friendsInvitedToTheGroup.push(extend(tmpFriend));
     }
 
-    friendsNotMembersOfTheGroup.push(extend(tmpFriend));
+    if (friendsWithHash[friend.uid] !== undefined) {
+        tmpFriend.hash = friendsWithHash[friend.uid][11];
+    }
+
+    friendsNotMembersOfTheGroup[friend.uid] = extend(tmpFriend);
+    friendsNotMembersOfTheGroup.length += 1;
 
     return getNextFriendInfo(idx, gid, callbackToCheckFriends);
 }
@@ -153,12 +159,13 @@ function getFriendsListCallback(additionalParameters, e) {
     }
 
     friendsMembersOfTheGroup    = [];
-    friendsNotMembersOfTheGroup = [];
+    friendsNotMembersOfTheGroup = {};
     friendsInvitedToTheGroup    = [];
 
     friendsListGlobal = answer.response;
 
-    getGroupMembersList();
+    getNonGroupMembersList();
+
 }
 
 function getFriendsList() {
@@ -198,6 +205,67 @@ function getGroupMembersList() {
         };
 
     vkApiInstance.get('groups.getMembers', getGroupMembersListCallback, this, parameters);
+}
+
+function getNonGroupMembersListCallback(additionalParameters, e) {
+    "use strict";
+
+    var answer             = e.target.response,
+        callback           = additionalParameters.callback,
+        i,
+        friends,
+        friendListLength,
+        friend;
+
+    try {
+        answer = answer.substr(answer.indexOf('{"all'));
+        answer = answer.substr(0, answer.indexOf("all_requests") - 2) + "}";
+        answer = answer.replace(/'/g, '"');
+        answer = JSON.parse(answer);
+
+    } catch (err) {
+        handleError('Error to parse non-group members. Invitations will not work');
+
+        return;
+    }
+
+    friends          = answer.all;
+    friendListLength = friends.length;
+
+    for (i = 0; i < friendListLength; i += 1) {
+        friend = friends[i];
+
+        if (friend.length !== undefined) {
+            friendsWithHash[friend[0]] = friend;
+        }
+    }
+
+    friendsNotMembersOfTheGroup.length = 0;
+
+    getGroupMembersList();
+}
+
+function getNonGroupMembersList(callback) {
+    "use strict";
+
+    var parameters,
+        additionalParameters;
+
+    additionalParameters = {
+        'callback' : callback,
+        'postRequest' : true,
+        'postUrl' : 'http://vk.com/al_friends.php',
+        'postParameters' : {
+            'field' : [
+                {'fieldName': 'act', 'fieldValue' : 'load_friends_silent'},
+                {'fieldName': 'al', 'fieldValue' : '1'},
+                {'fieldName': 'gid', 'fieldValue' : vkGroupId},
+                {'fieldName': 'id', 'fieldValue' :  vkMemberId}
+            ]
+        }
+    }
+
+    vkApiInstance.get('', getNonGroupMembersListCallback, this, parameters, additionalParameters, 'POST');
 }
 
 function onReloadFriendsListLinkClick() {
@@ -256,7 +324,6 @@ function loadDateFromStorage(callback) {
 
         updateFriendsDataLables();
     });
-
 }
 
 document.addEventListener('DOMContentLoaded', function () {

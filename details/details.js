@@ -136,7 +136,7 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
     $log     = $('.log-window');
     $logBody = $log.find('.log-body').find('textarea');
 
-    $logBody.text($logBody.text() + '\n' +  contentMessage);
+    $logBody.text($logBody.text() + '\n\n' +  contentMessage);
 }
 
 function onSendMessageButtonClick(e) {
@@ -189,16 +189,16 @@ function inviteMemberCallback($actionResultHolder, contentClass, contentMessage,
 
     $tab              = $('#tab2');
     $friendInfoHolder = $tab.children('div.friend-info');
+    $friendsTable     = $friendInfoHolder.children('table');
 
-    $friendsTable  = $friendInfoHolder.children('table');
     $friendsTable.append($tableRow.clone(true));
 
     $('#friends_invited_to_the_group').text(friendsInvitedToTheGroup.length);
-
     $('#friends_not_members_of_the_group').text(friendsNotMembersOfTheGroup.length);
 
     $oldTable = $tableRow.parent();
     $oldRow   = $oldTable.find('td.friend_url[data-friend-uid="'+ friendUid +'"]').parent();
+
     $oldRow.empty();
 
     vk_gm_all_friends_data = {
@@ -247,6 +247,7 @@ function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messa
     additionalParameters = {
         'callback' : callback,
         'actionResultHolder': $actionResultHolder,
+        'messageObjectStack': messageObjectStack,
         'tableRow' : $tableRow,
         'postRequest' : true,
         'friendUid' : friendUid,
@@ -625,42 +626,47 @@ function inviteMemberHandler(additionalParameters, e) {
     var answer             = e.target.response,
         friendUid          = additionalParameters.friendUid,
         callback           = additionalParameters.callback,
-        actionResultHolder = additionalParameters.actionResultHolder,
+        $actionResultHolder = additionalParameters.actionResultHolder,
         $tableRow          = additionalParameters.tableRow,
         contentMessage     = 'invitation has been sent successfully',
         contentClass       = 'text-success',
         actionTime         = new Date(),
         messageObjectStack = additionalParameters.messageObjectStack,
         obj,
-        i, friends, friendListLength, friendsGlobal = {}, friend;
+        i, friends, friendListLength, friendsGlobal = {}, friend,
+        userFullName = friendsNotMembersOfTheGroup[friendUid].first_name + ' ' + friendsNotMembersOfTheGroup[friendUid].last_name;
 
     answer.replace(/<\/?[^>]+(>|$)/g, "");
 
-    if (answer.toLowerCase().indexOf('sent') === -1) {
-        contentMessage = answer;
-        contentClass   = 'text-error';
+    if (messageObjectStack !== undefined) {
+        setTimeout(function () {
+
+            obj = messageObjectStack.pop();
+
+            if (obj === undefined) {
+                return;
+            }
+
+            inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder,
+                function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
+                    inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid);
+                },
+                messageObjectStack
+            );
+
+        }, 5000);
     }
 
-    callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString(), $tableRow, friendUid);
 
-    // if (messageObjectStack !== undefined) {
-    //     setTimeout(function () {
+    if (answer.toLowerCase().indexOf('sent') === -1) {
+        contentMessage = userFullName + ' ' + answer;
+        contentClass   = 'text-error';
+        updateActionResult($actionResultHolder, contentClass, contentMessage);
 
-    //         obj = messageObjectStack.pop();
+        return;
+    }
 
-    //         if (obj === undefined) {
-    //             return;
-    //         }
-
-    //         sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
-    //             function ($currentActionResultHolder, contentClass, contentMessage) {
-    //                 updateActionResult($currentActionResultHolder, contentClass, contentMessage);
-    //             },
-    //             messageObjectStack
-    //             );
-
-    //     }, 150);
-    // }
+    callback($actionResultHolder, contentClass, userFullName + ' ' + contentMessage + ' ' + actionTime.toTimeString(), $tableRow, friendUid);
 }
 
 function sendMessage(friendUid, messageText, $actionResultHolder, callback, messageObjectStack) {
@@ -820,6 +826,7 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
             $actionResultHolder,
             friendUidArray      = [],
             actionResultHolderArray = [],
+            tableRowArray = [],
             i,
             obj,
             messageObjectStack = [];
@@ -836,6 +843,7 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
                     $actionResultHolder = $tr.find('.friend-action-result');
                     friendUidArray.push(friendUid);
                     actionResultHolderArray.push($actionResultHolder);
+                    tableRowArray.push($tr);
                 }
             }
 
@@ -843,7 +851,7 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
                 messageObjectStack.push({
                     'friendUid': friendUidArray[i],
                     'actionResultHolder' : actionResultHolderArray[i],
-                    'tableRow' : $tr
+                    'tableRow' : tableRowArray[i]
                 });
             }
 

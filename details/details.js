@@ -177,6 +177,44 @@ function onMessagesHistoryButtonClick(e) {
     $('#historyMessagesModal').modal();
 }
 
+function inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
+    "use strict";
+
+    var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow;
+
+    friendsInvitedToTheGroup.push(friendsNotMembersOfTheGroup[friendUid]);
+
+    friendsNotMembersOfTheGroup[friendUid] = undefined;
+    friendsNotMembersOfTheGroup.length -= 1;
+
+    $tab              = $('#tab2');
+    $friendInfoHolder = $tab.children('div.friend-info');
+
+    $friendsTable  = $friendInfoHolder.children('table');
+    $friendsTable.append($tableRow.clone(true));
+
+    $('#friends_invited_to_the_group').text(friendsInvitedToTheGroup.length);
+
+    $('#friends_not_members_of_the_group').text(friendsNotMembersOfTheGroup.length);
+
+    $oldTable = $tableRow.parent();
+    $oldRow   = $oldTable.find('td.friend_url[data-friend-uid="'+ friendUid +'"]').parent();
+    $oldRow.empty();
+
+    vk_gm_all_friends_data = {
+        'membersListGlobal':           membersListGlobal,
+        'friendsListGlobal':           friendsListGlobal,
+        'friendsMembersOfTheGroup':    friendsMembersOfTheGroup,
+        'friendsNotMembersOfTheGroup': friendsNotMembersOfTheGroup,
+        'friendsInvitedToTheGroup':    friendsInvitedToTheGroup
+    };
+
+    chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
+    });
+
+    updateActionResult($actionResultHolder, contentClass, contentMessage);
+}
+
 function onInviteButtonClick(e) {
     "use strict";
 
@@ -187,48 +225,22 @@ function onInviteButtonClick(e) {
         $actionResultHolder = $tableRow.find('.friend-action-result'),
         callback,
         parameters,
-        additionalParameters
-        ;
+        additionalParameters;
 
-    callback = function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
-        var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow;
+    inviteMember(friendUid, $tableRow, $actionResultHolder, function($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
+        inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid);
+    });
+}
 
-        friendsInvitedToTheGroup.push(friendsNotMembersOfTheGroup[friendUid]);
+function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messageObjectStack) {
+    "use strict";
 
-        friendsNotMembersOfTheGroup[friendUid] = undefined;
-        friendsNotMembersOfTheGroup.length -= 1;
-
-        $tab              = $('#tab2');
-        $friendInfoHolder = $tab.children('div.friend-info');
-
-        $friendsTable  = $friendInfoHolder.children('table');
-        $friendsTable.append($tableRow.clone(true));
-
-        $('#friends_invited_to_the_group').text(friendsInvitedToTheGroup.length);
-
-        $('#friends_not_members_of_the_group').text(friendsNotMembersOfTheGroup.length);
-
-        $oldTable = $tableRow.parent();
-        $oldRow = $oldTable.find('td.friend_url[data-friend-uid="'+ friendUid +'"]').parent();
-        $oldRow.empty();
-
-        vk_gm_all_friends_data = {
-            'membersListGlobal':           membersListGlobal,
-            'friendsListGlobal':           friendsListGlobal,
-            'friendsMembersOfTheGroup':    friendsMembersOfTheGroup,
-            'friendsNotMembersOfTheGroup': friendsNotMembersOfTheGroup,
-            'friendsInvitedToTheGroup':    friendsInvitedToTheGroup
-        };
-
-        chrome.storage.local.set({'vk_gm_all_friends_data': vk_gm_all_friends_data}, function () {
-        });
-
-        updateActionResult($actionResultHolder, contentClass, contentMessage);
-    };
-
+    var parameters,
+        additionalParameters;
 
     if (friendsNotMembersOfTheGroup[friendUid].hash === undefined) {
         updateActionResult($actionResultHolder, 'text-error', 'Impossible to invite this friend');
+
         return;
     }
 
@@ -248,7 +260,7 @@ function onInviteButtonClick(e) {
                 {'fieldName': 'hash', 'fieldValue' : friendsNotMembersOfTheGroup[friendUid].hash}
             ]
         }
-    }
+    };
 
     vkApiInstance.get('', inviteMemberHandler, this, parameters, additionalParameters, 'POST');
 }
@@ -624,7 +636,7 @@ function inviteMemberHandler(additionalParameters, e) {
 
     answer.replace(/<\/?[^>]+(>|$)/g, "");
 
-    if (answer.toLowerCase().indexOf('success') === -1) {
+    if (answer.toLowerCase().indexOf('sent') === -1) {
         contentMessage = answer;
         contentClass   = 'text-error';
     }
@@ -794,7 +806,56 @@ function onLoadFriendsToContentList(e, friendsArray, tabId) {
             },
             messageObjectStack
         );
+    });
 
+    $('.btn-new-invitation-to-all').on('click', function (e) {
+        var $this               = $(e.currentTarget),
+            $parent             = $this.closest('.tab-pane'),
+            $checkboxes         = $parent.find('.friend_checkbox input:checked'),
+            cbIdx,
+            $cb,
+            $tr,
+            friendName,
+            friendUid,
+            $actionResultHolder,
+            friendUidArray      = [],
+            actionResultHolderArray = [],
+            i,
+            obj,
+            messageObjectStack = [];
+
+        friendName = $checkboxes.length + ' friends';
+
+        if ($checkboxes.length > 0) {
+            for (cbIdx = 0; cbIdx < $checkboxes.length; cbIdx += 1) {
+                if ($checkboxes.hasOwnProperty(cbIdx)) {
+                    $cb                 = $checkboxes[cbIdx];
+                    $tr                 = $($cb).closest('tr');
+                    friendName          = $tr.find('.friend_name').text();
+                    friendUid           = $tr.find('.friend_url').data('friend-uid');
+                    $actionResultHolder = $tr.find('.friend-action-result');
+                    friendUidArray.push(friendUid);
+                    actionResultHolderArray.push($actionResultHolder);
+                }
+            }
+
+            for (i = 0; i < friendUidArray.length; i += 1) {
+                messageObjectStack.push({
+                    'friendUid': friendUidArray[i],
+                    'actionResultHolder' : actionResultHolderArray[i],
+                    'tableRow' : $tr
+                });
+            }
+
+            obj = messageObjectStack.pop();
+
+            inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder,
+                function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
+                    inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid);
+                },
+                messageObjectStack
+            );
+        }
     });
 
     $('.btn-new-message-to-all').on('click', function (e) {

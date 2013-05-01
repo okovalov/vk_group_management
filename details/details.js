@@ -11,6 +11,15 @@ var $sendMessageButtonHolderGlobal,
     friendsInvitedToTheGroup,
     vkGlobalAccessToken;
 
+function log(contentMessage) {
+    "use strict";
+
+    var $log     = $('.log-window'),
+        $logBody = $log.find('.log-body').find('textarea');
+
+    $logBody.text($logBody.text() + '\n\n' +  contentMessage);
+}
+
 function updateFriendsInforamtionLables() {
     "use strict";
 
@@ -29,9 +38,7 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
 
     var temporaryElementOptions,
         elementOptions,
-        $actionResult,
-        $log,
-        $logBody;
+        $actionResult;
 
     temporaryElementOptions = {
         'title'     : 'Details of the last action',
@@ -47,10 +54,7 @@ function updateActionResult($actionResultHolder, contentClass, contentMessage) {
     $actionResultHolder.empty();
     $actionResult = $('<p></p>', elementOptions).popover(temporaryElementOptions).appendTo($actionResultHolder);
 
-    $log     = $('.log-window');
-    $logBody = $log.find('.log-body').find('textarea');
-
-    $logBody.text($logBody.text() + '\n\n' +  contentMessage);
+    log(contentMessage);
 }
 
 function loadDateFromStorage(callback) {
@@ -263,7 +267,7 @@ function createMessagesHistoryButton() {
 function inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid, messageObjectStack) {
     "use strict";
 
-    var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow, $log, $logBody;
+    var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow;
 
     friendsInvitedToTheGroup.push(friendsNotMembersOfTheGroup[friendUid]);
 
@@ -298,10 +302,7 @@ function inviteMemberCallback($actionResultHolder, contentClass, contentMessage,
     updateActionResult($actionResultHolder, contentClass, contentMessage);
 
     if (messageObjectStack === undefined || messageObjectStack.length === 0) {
-        $log     = $('.log-window');
-        $logBody = $log.find('.log-body').find('textarea');
-
-        $logBody.text($logBody.text() + '\n\n' +  'All the invitations have sent');
+        log('All the invitations have sent');
     }
 }
 

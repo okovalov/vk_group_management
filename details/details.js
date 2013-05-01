@@ -61,14 +61,12 @@ function loadDateFromStorage(callback) {
     "use strict";
 
     chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) {
-
         if (items.vk_gm_all_friends_data.friendsListGlobal === undefined) {
             return;
         }
 
         // chrome.storage.local.get({'vk_gm_all_friends_data': {}}, function (items) { console.log(items); });
         chrome.storage.local.get({'vk_access_token': {}}, function (items) {
-
             if (items.vk_access_token.length === undefined) {
                 requestAuthentication();
 
@@ -76,7 +74,6 @@ function loadDateFromStorage(callback) {
             }
 
             vkGlobalAccessToken = items.vk_access_token;
-
         });
 
         membersListGlobal           = items.vk_gm_all_friends_data.membersListGlobal;
@@ -103,7 +100,7 @@ function onSelectUnselectFriendsClick(e) {
     $checkboxes.prop('checked', cbx.checked);
 }
 
-function createFriendsTableHead() {
+function generateFriendsTableHeader() {
     "use strict";
 
     var $tableHeader,
@@ -158,9 +155,10 @@ function onSendMessageButtonClick(e) {
     "use strict";
 
     var $this               = $(e.currentTarget),
-        friendName          = $this.closest('tr').find('.friend_name').text(),
-        friendUid           = $this.closest('tr').find('.friend_url').data('friend-uid'),
-        $actionResultHolder = $this.closest('tr').find('.friend-action-result'),
+        $tableRow           = $this.closest('tr'),
+        friendName          = $tableRow.find('.friend_name').text(),
+        friendUid           = $tableRow.find('.friend_url').data('friend-uid'),
+        $actionResultHolder = $tableRow.find('.friend-action-result'),
         $modal              = $('#newMessageModal');
 
     $modal.find('#newMessageModalLabel').find('span').text("'" + friendName + "'");
@@ -170,7 +168,7 @@ function onSendMessageButtonClick(e) {
     $('#newMessageModal').modal();
 }
 
-function createSendMessageButton() {
+function generateSendMessageButton() {
     "use strict";
 
     var elementOptions,
@@ -200,7 +198,7 @@ function onPostOnWallButtonClick(e) {
     alert('onPostOnWallButtonClick');
 }
 
-function createPostOnWallButton() {
+function generatePostOnWallButton() {
     "use strict";
 
     var elementOptions,
@@ -228,9 +226,10 @@ function onMessagesHistoryButtonClick(e) {
     "use strict";
 
     var $this               = $(e.currentTarget),
-        friendName          = $this.closest('tr').find('.friend_name').text(),
-        friendUid           = $this.closest('tr').find('.friend_url').data('friend-uid'),
-        $actionResultHolder = $this.closest('tr').find('.friend-action-result'),
+        $tableRow           = $this.closest('tr'),
+        friendName          = $tableRow.find('.friend_name').text(),
+        friendUid           = $tableRow.find('.friend_url').data('friend-uid'),
+        $actionResultHolder = $tableRow.find('.friend-action-result'),
         $modal              = $('#historyMessagesModal');
 
     $modal.find('#historyMessagesModalLabel').find('span').text("'" + friendName + "'");
@@ -240,7 +239,7 @@ function onMessagesHistoryButtonClick(e) {
     $('#historyMessagesModal').modal();
 }
 
-function createMessagesHistoryButton() {
+function generateMessagesHistoryButton() {
     "use strict";
 
     var elementOptions,
@@ -264,10 +263,15 @@ function createMessagesHistoryButton() {
     return $messagesHistoryButtonHolderGlobal;
 }
 
-function inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid, messageObjectStack) {
+function inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid, invitationObjectStack) {
     "use strict";
 
-    var $tab, $friendInfoHolder, $friendsTable, vk_gm_all_friends_data, $oldTable, $oldRow;
+    var $tab,
+        $friendInfoHolder,
+        $friendsTable,
+        vk_gm_all_friends_data,
+        $oldTable,
+        $oldRow;
 
     friendsInvitedToTheGroup.push(friendsNotMembersOfTheGroup[friendUid]);
 
@@ -301,12 +305,12 @@ function inviteMemberCallback($actionResultHolder, contentClass, contentMessage,
 
     updateActionResult($actionResultHolder, contentClass, contentMessage);
 
-    if (messageObjectStack === undefined || messageObjectStack.length === 0) {
-        log('All the invitations have sent');
+    if (invitationObjectStack === undefined || invitationObjectStack.length === 0) {
+        log('All the invitations have been sent');
     }
 }
 
-function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messageObjectStack) {
+function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, invitationObjectStack) {
     "use strict";
 
     var parameters,
@@ -320,39 +324,34 @@ function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messa
     }
 
     inviteMemberHandler = function (additionalParameters, e) {
-        var answer             = e.target.response,
-            friendUid          = additionalParameters.friendUid,
-            callback           = additionalParameters.callback,
-            $actionResultHolder = additionalParameters.actionResultHolder,
-            $tableRow          = additionalParameters.tableRow,
-            contentMessage     = 'invitation has been sent successfully',
-            contentClass       = 'text-success',
-            actionTime         = new Date(),
-            messageObjectStack = additionalParameters.messageObjectStack,
+        var answer                = e.target.response,
+            friendUid             = additionalParameters.friendUid,
+            callback              = additionalParameters.callback,
+            $actionResultHolder   = additionalParameters.actionResultHolder,
+            $tableRow             = additionalParameters.tableRow,
+            contentMessage        = 'invitation has been sent successfully',
+            contentClass          = 'text-success',
+            actionTime            = new Date(),
+            invitationObjectStack = additionalParameters.invitationObjectStack,
             obj,
-            i,
-            friends,
-            friendListLength,
-            friendsGlobal = {},
-            friend,
+            // i,
+            // friends,
+            // friendListLength,
+            // friendsGlobal = {},
+            // friend,
             userFullName = friendsNotMembersOfTheGroup[friendUid].first_name + ' ' + friendsNotMembersOfTheGroup[friendUid].last_name;
 
         answer.replace(/<\/?[^>]+(>|$)/g, "");
 
-        if (messageObjectStack !== undefined) {
+        if (invitationObjectStack !== undefined) {
             setTimeout(function () {
-
-                obj = messageObjectStack.pop();
+                obj = invitationObjectStack.pop();
 
                 if (obj === undefined) {
                     return;
                 }
 
-                inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder,
-                    function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
-                        inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid, messageObjectStack);
-                    },
-                    messageObjectStack);
+                inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder, inviteMemberCallback, invitationObjectStack);
 
             }, 5000);
         }
@@ -360,6 +359,7 @@ function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messa
         if (answer.toLowerCase().indexOf('sent') === -1) {
             contentMessage = userFullName + ' ' + answer;
             contentClass   = 'text-error';
+
             updateActionResult($actionResultHolder, contentClass, contentMessage);
 
             return;
@@ -371,7 +371,7 @@ function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, messa
     additionalParameters = {
         'callback' : callback,
         'actionResultHolder': $actionResultHolder,
-        'messageObjectStack': messageObjectStack,
+        'invitationObjectStack': invitationObjectStack,
         'tableRow' : $tableRow,
         'postRequest' : true,
         'friendUid' : friendUid,
@@ -395,19 +395,13 @@ function onInviteButtonClick(e) {
 
     var $this               = $(e.currentTarget),
         $tableRow           = $this.closest('tr'),
-        // friendName          = $tableRow.find('.friend_name').text(),
         friendUid           = $tableRow.find('.friend_url').data('friend-uid'),
         $actionResultHolder = $tableRow.find('.friend-action-result');
-        // callback,
-        // parameters,
-        //additionalParameters;
 
-    inviteMember(friendUid, $tableRow, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
-        inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid);
-    });
+    inviteMember(friendUid, $tableRow, $actionResultHolder, inviteMemberCallback);
 }
 
-function createInviteButton() {
+function generateInviteButton() {
     "use strict";
 
     var elementOptions,
@@ -507,12 +501,12 @@ function createActionButtonsGroup(tabId) {
     elementOptions = {'class' : 'btn-group'};
     $buttonsGroup  = $('<div></div>', elementOptions);
 
-    $sendMessageButton     = createSendMessageButton().appendTo($buttonsGroup);
-    $postOnWallButton      = createPostOnWallButton().appendTo($buttonsGroup);
-    $messagesHistoryButton = createMessagesHistoryButton().appendTo($buttonsGroup);
+    $sendMessageButton     = generateSendMessageButton().appendTo($buttonsGroup);
+    $postOnWallButton      = generatePostOnWallButton().appendTo($buttonsGroup);
+    $messagesHistoryButton = generateMessagesHistoryButton().appendTo($buttonsGroup);
 
     if (tabId === 'tab3') {
-        $inviteButton              = createInviteButton().appendTo($buttonsGroup);
+        $inviteButton              = generateInviteButton().appendTo($buttonsGroup);
         $invitationsHistoryButton  = createInvitationsHistoryButton().appendTo($buttonsGroup);
         $invitationsHistoryElement = createInvitationsHistoryElement().appendTo($buttonsGroup);
     }
@@ -621,7 +615,7 @@ function loadFriendsToContentListHandler(friendsArray, tabId) {
 
     elementOptions = {'class' : 'table table-striped  table-condensed table-bordered'};
     $friendsTable  = $('<table></table>', elementOptions).appendTo($friendInfoHolder);
-    $tableHeader   = createFriendsTableHead().appendTo($friendsTable);
+    $tableHeader   = generateFriendsTableHeader().appendTo($friendsTable);
 
     for (friendIndex in friendsArray) {
         if (friendsArray.hasOwnProperty(friendIndex)) {
@@ -673,19 +667,13 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback, mess
 
         if (messageObjectStack !== undefined) {
             setTimeout(function () {
-
                 obj = messageObjectStack.pop();
 
                 if (obj === undefined) {
                     return;
                 }
 
-                sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
-                    function ($currentActionResultHolder, contentClass, contentMessage) {
-                        updateActionResult($currentActionResultHolder, contentClass, contentMessage);
-                    },
-                    messageObjectStack
-                    );
+                sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder, updateActionResult, messageObjectStack);
 
             }, 150);
         }
@@ -794,9 +782,7 @@ function onMessageModalSendMessageButtonClick(e) {
     $parent.find('button:first-child').trigger('click', $message);
 
     if (friendUid !== '') {
-        sendMessage(friendUid, messageText, $actionResultHolder, function ($actionResultHolder, contentClass, contentMessage) {
-            updateActionResult($actionResultHolder, contentClass, contentMessage);
-        });
+        sendMessage(friendUid, messageText, $actionResultHolder, updateActionResult);
 
         return;
     }
@@ -809,11 +795,7 @@ function onMessageModalSendMessageButtonClick(e) {
 
     obj = messageObjectStack.pop();
 
-    sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder,
-        function ($currentActionResultHolder, contentClass, contentMessage) {
-            updateActionResult($currentActionResultHolder, contentClass, contentMessage);
-        },
-        messageObjectStack);
+    sendMessage(obj.friendUid, obj.messageText, obj.actionResultHolder, updateActionResult, messageObjectStack);
 }
 
 function onButtonNewInvitationToAllClick(e) {

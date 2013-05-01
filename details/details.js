@@ -390,7 +390,7 @@ function inviteMember(friendUid, $tableRow, $actionResultHolder, callback, invit
     vkApiInstance.get('', inviteMemberHandler, null, parameters, additionalParameters, 'POST');
 }
 
-function onInviteButtonClick(e) {
+function onInvitationButtonClick(e) {
     "use strict";
 
     var $this               = $(e.currentTarget),
@@ -401,7 +401,7 @@ function onInviteButtonClick(e) {
     inviteMember(friendUid, $tableRow, $actionResultHolder, inviteMemberCallback);
 }
 
-function generateInviteButton() {
+function generateInvitationButton() {
     "use strict";
 
     var elementOptions,
@@ -417,7 +417,7 @@ function generateInviteButton() {
         'title': "Invite to the group"
     };
 
-    $inviteButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onInviteButtonClick);
+    $inviteButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onInvitationButtonClick);
     elementOptions            = {'class' : 'icon-plus'};
     $inviteButton             = $('<i></i>', elementOptions).appendTo($inviteButtonHolderGlobal);
 
@@ -428,19 +428,19 @@ function onInvitationsHistoryButtonClick(e) {
     "use strict";
 
     var $this                = $(e.currentTarget),
-        friendName           = $this.closest('tr').find('.friend_name').text(),
-        friendUid            = $this.closest('tr').find('.friend_url').data('friend-uid'),
+        $tableRow            = $this.closest('tr'),
+        friendName           = $tableRow.find('.friend_name').text(),
+        friendUid            = $tableRow.find('.friend_url').data('friend-uid'),
         $invitationsHistory  = $this.parent().find('.collapse');
 
     if ($invitationsHistory.hasClass('in')) {
-        $invitationsHistory.popover('hide');
         $invitationsHistory.collapse('hide');
     }
 
     $invitationsHistory.collapse('show');
 }
 
-function createInvitationsHistoryButton() {
+function generateInvitationsHistoryButton() {
     "use strict";
 
     var elementOptions,
@@ -457,36 +457,29 @@ function createInvitationsHistoryButton() {
     };
 
     $invitationsHistoryButtonHolderGlobal = $('<a></a>', elementOptions).on('click', onInvitationsHistoryButtonClick);
-    elementOptions                  = {'class' : 'icon-question-sign'};
-    $invitationsHistoryButton       = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolderGlobal);
+    elementOptions                        = {'class' : 'icon-question-sign'};
+    $invitationsHistoryButton             = $('<i></i>', elementOptions).appendTo($invitationsHistoryButtonHolderGlobal);
 
     return $invitationsHistoryButtonHolderGlobal;
 }
 
-function createInvitationsHistoryElement() {
+function generateInvitationsHistoryElement() {
     "use strict";
 
     var elementOptions,
-        temporaryElementOptions,
         $invitationsHistoryElement;
-
-    temporaryElementOptions = {
-        'title':     'Invitations history',
-        'content':   'Nothing to say for now',
-        'placement': 'bottom'
-    };
 
     elementOptions = {
         'class': "collapse",
         'text':  "Invited 10 times - click for details"
     };
 
-    $invitationsHistoryElement = $('<div></div>', elementOptions).popover(temporaryElementOptions);
+    $invitationsHistoryElement = $('<div></div>', elementOptions);
 
     return $invitationsHistoryElement;
 }
 
-function createActionButtonsGroup(tabId) {
+function generateActionButtonsGroup(tabId) {
     "use strict";
 
     var $buttonsGroup,
@@ -506,15 +499,15 @@ function createActionButtonsGroup(tabId) {
     $messagesHistoryButton = generateMessagesHistoryButton().appendTo($buttonsGroup);
 
     if (tabId === 'tab3') {
-        $inviteButton              = generateInviteButton().appendTo($buttonsGroup);
-        $invitationsHistoryButton  = createInvitationsHistoryButton().appendTo($buttonsGroup);
-        $invitationsHistoryElement = createInvitationsHistoryElement().appendTo($buttonsGroup);
+        $inviteButton              = generateInvitationButton().appendTo($buttonsGroup);
+        $invitationsHistoryButton  = generateInvitationsHistoryButton().appendTo($buttonsGroup);
+        $invitationsHistoryElement = generateInvitationsHistoryElement().appendTo($buttonsGroup);
     }
 
     return $buttonsGroup;
 }
 
-function createFriendListTableRow(tab, friend) {
+function generateFriendListTableRow(tab, friend) {
     "use strict";
 
     var $tableRow,
@@ -571,7 +564,7 @@ function createFriendListTableRow(tab, friend) {
     elementOptions = {'class' : 'btn-toolbar' };
     $btnToolbar    = $('<div></div>', elementOptions).appendTo($btnHolder);
 
-    $btnGroup = createActionButtonsGroup(tab).appendTo($btnToolbar);
+    $btnGroup = generateActionButtonsGroup(tab).appendTo($btnToolbar);
 
     elementOptions      = {'class' : 'friend-action-result'};
     $actionResultHolder = $('<td></td>', elementOptions).appendTo($tableRow);
@@ -623,7 +616,7 @@ function loadFriendsToContentListHandler(friendsArray, tabId) {
 
             if (friend !== undefined) {
                 currentProgress = (friendsArray.length * friendIndex  / 100);
-                $tableRow       = createFriendListTableRow(tabId, friend);
+                $tableRow       = generateFriendListTableRow(tabId, friend);
 
                 $friendsTable.append($tableRow);
                 $progressBar.css('width', currentProgress + '%');
@@ -640,6 +633,7 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback, mess
     "use strict";
 
     var sendMessageHandler,
+        additionalParameters,
         parameters = {
             'access_token' : vkGlobalAccessToken,
             'uid'          : friendUid,
@@ -648,14 +642,13 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback, mess
         };
 
     sendMessageHandler = function (additionalParameters, e) {
-
-        var answer             = JSON.parse(e.target.response),
-            callback           = additionalParameters.callback,
-            actionResultHolder = additionalParameters.actionResultHolder,
-            contentMessage     = 'message has been sent successfully',
-            contentClass       = 'text-success',
-            actionTime         = new Date(),
-            messageObjectStack = additionalParameters.messageObjectStack,
+        var answer              = JSON.parse(e.target.response),
+            callback            = additionalParameters.callback,
+            $actionResultHolder = additionalParameters.actionResultHolder,
+            contentMessage      = 'message has been sent successfully',
+            contentClass        = 'text-success',
+            actionTime          = new Date(),
+            messageObjectStack  = additionalParameters.messageObjectStack,
             obj;
 
         if (answer.error !== undefined) {
@@ -663,7 +656,7 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback, mess
             contentClass   = 'text-error';
         }
 
-        callback(actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
+        callback($actionResultHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
 
         if (messageObjectStack !== undefined) {
             setTimeout(function () {
@@ -679,40 +672,13 @@ function sendMessage(friendUid, messageText, $actionResultHolder, callback, mess
         }
     };
 
-    vkApiInstance.get('messages.send', sendMessageHandler, null, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder, 'messageObjectStack': messageObjectStack});
-}
-
-function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, callback) {
-    "use strict";
-
-    var getHistoryHandler,
-        parameters = {
-            'access_token' : vkGlobalAccessToken,
-            'uid'          : friendUid,
-            'offset'       : messageOffset,
-            'count'        : messageCount
-        };
-
-    getHistoryHandler = function (additionalParameters, e) {
-
-        var answer             = JSON.parse(e.target.response),
-            callback           = additionalParameters.callback,
-            friendUid           = additionalParameters.friendUid,
-            actionResultHolder = additionalParameters.actionResultHolder,
-            historyHolder      = additionalParameters.historyHolder,
-            contentMessage     = 'messages history has been retrieved successfully',
-            contentClass       = 'text-success',
-            actionTime         = new Date();
-
-        if (answer.error !== undefined) {
-            contentMessage = answer.error.error_msg;
-            contentClass   = 'text-error';
-        }
-
-        callback(friendUid, answer, actionResultHolder, historyHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
+    additionalParameters = {
+        'callback':           callback,
+        'actionResultHolder': $actionResultHolder,
+        'messageObjectStack': messageObjectStack
     };
 
-    vkApiInstance.get('messages.getHistory', getHistoryHandler, null, parameters, {'callback' : callback, 'actionResultHolder': $actionResultHolder, 'historyHolder': $historyHolder, 'friendUid' : friendUid});
+    vkApiInstance.get('messages.send', sendMessageHandler, null, parameters, additionalParameters);
 }
 
 function getHistoryCallback(friendUid, answer, $actionResultHolder, $historyHolder, contentClass, contentMessage) {
@@ -737,6 +703,46 @@ function getHistoryCallback(friendUid, answer, $actionResultHolder, $historyHold
     }
 
     updateActionResult($actionResultHolder, contentClass, contentMessage);
+}
+
+function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder, $historyHolder, callback) {
+    "use strict";
+
+    var getHistoryHandler,
+        additionalParameters,
+        parameters = {
+            'access_token': vkGlobalAccessToken,
+            'uid':          friendUid,
+            'offset':       messageOffset,
+            'count':        messageCount
+        };
+
+    getHistoryHandler = function (additionalParameters, e) {
+        var answer             = JSON.parse(e.target.response),
+            callback           = additionalParameters.callback,
+            friendUid          = additionalParameters.friendUid,
+            actionResultHolder = additionalParameters.actionResultHolder,
+            historyHolder      = additionalParameters.historyHolder,
+            contentMessage     = 'messages history has been retrieved successfully',
+            contentClass       = 'text-success',
+            actionTime         = new Date();
+
+        if (answer.error !== undefined) {
+            contentMessage = answer.error.error_msg;
+            contentClass   = 'text-error';
+        }
+
+        callback(friendUid, answer, actionResultHolder, historyHolder, contentClass, contentMessage + ' ' + actionTime.toTimeString());
+    };
+
+    additionalParameters = {
+        'callback':           callback,
+        'actionResultHolder': $actionResultHolder,
+        'historyHolder':      $historyHolder,
+        'friendUid':          friendUid
+    };
+
+    vkApiInstance.get('messages.getHistory', getHistoryHandler, null, parameters, additionalParameters);
 }
 
 function onMessageModalShown() {

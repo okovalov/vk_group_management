@@ -745,10 +745,10 @@ function getHistory(friendUid, messageOffset, messageCount, $actionResultHolder,
     vkApiInstance.get('messages.getHistory', getHistoryHandler, null, parameters, additionalParameters);
 }
 
-function onMessageModalShown() {
+function onMessageModalShown(e) {
     "use strict";
 
-    var $parent = $(this),
+    var $parent             = $(e.currentTarget),
         $actionResultHolder = $parent.data('actionResultHolder'),
         friendUid           = $parent.find('#friendUid').val(),
         messageOffset       = 0,
@@ -774,9 +774,9 @@ function onMessageModalCloseButtonClick(e, messageArea) {
 function onMessageModalSendMessageButtonClick(e) {
     "use strict";
 
-    var $parent = $(this).parent().parent(),
+    var $this               = $(e.currentTarget),
+        $parent             = $this.parent().parent(),
         $actionResultHolder = $parent.data('actionResultHolder'),
-        $currentActionResultHolder,
         friendUid           = $parent.find('#friendUid').val(),
         $message            = $parent.find('.message'),
         messageText         = $message.val(),
@@ -821,7 +821,7 @@ function onButtonNewInvitationToAllClick(e) {
         tableRowArray = [],
         i,
         obj,
-        messageObjectStack = [];
+        invitationObjectStack = [];
 
     friendName = $checkboxes.length + ' friends';
 
@@ -840,20 +840,16 @@ function onButtonNewInvitationToAllClick(e) {
         }
 
         for (i = 0; i < friendUidArray.length; i += 1) {
-            messageObjectStack.push({
-                'friendUid': friendUidArray[i],
-                'actionResultHolder' : actionResultHolderArray[i],
-                'tableRow' : tableRowArray[i]
+            invitationObjectStack.push({
+                'friendUid':          friendUidArray[i],
+                'actionResultHolder': actionResultHolderArray[i],
+                'tableRow':           tableRowArray[i]
             });
         }
 
-        obj = messageObjectStack.pop();
+        obj = invitationObjectStack.pop();
 
-        inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder,
-            function ($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid) {
-                inviteMemberCallback($actionResultHolder, contentClass, contentMessage, $tableRow, friendUid, messageObjectStack);
-            },
-            messageObjectStack);
+        inviteMember(obj.friendUid, obj.tableRow, obj.actionResultHolder, inviteMemberCallback, invitationObjectStack);
     }
 }
 
